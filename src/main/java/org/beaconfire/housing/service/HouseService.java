@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 public class HouseService {
 
@@ -14,6 +16,11 @@ public class HouseService {
 
     @Transactional
     public void createHouse(House house) {
-        houseRepository.saveHouse(house);
+        houseRepository.save(house);
+    }
+
+    @Transactional
+    public List<House> getAllHouses() {
+        return houseRepository.findAll();
     }
 }
