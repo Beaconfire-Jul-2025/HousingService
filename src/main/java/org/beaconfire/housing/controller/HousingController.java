@@ -53,4 +53,23 @@ public class HousingController {
     }
 
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteHouse(@PathVariable int id, Authentication authentication) {
+        boolean isHr = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_HR"));
+        if (!isHr) {
+            return ResponseEntity.status(403).body("Only HR can delete houses.");
+        }
+
+        try {
+            houseService.deleteHouseById(id);
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "House deleted successfully.");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
 }
