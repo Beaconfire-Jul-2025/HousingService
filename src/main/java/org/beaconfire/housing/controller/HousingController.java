@@ -10,6 +10,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.Map;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/housing")
@@ -36,8 +38,18 @@ public class HousingController {
         house.setMaxOccupant(dto.getMaxOccupant());
         house.setDescription(dto.getDescription());
 
-        houseService.createHouse(house);
-        return ResponseEntity.ok("House created successfully.");
+        try {
+            houseService.createHouse(house);
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "House created successfully.");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            // landlord does not exist
+            Map<String, String> response = new HashMap<>();
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+            // optional: if dont want duplicates, make the addr unique in db
+        }
     }
 
 
