@@ -52,6 +52,32 @@ public class HousingController {
         }
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateHouse(@PathVariable int id, @RequestBody HouseDTO updatedHouse, Authentication authentication) {
+        boolean isHr = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_HR"));
+        if (!isHr) {
+            return ResponseEntity.status(403).body("Only HR can update houses.");
+        }
+
+        try {
+            House house = new House();
+            house.setId(id);
+            house.setLandlordId(updatedHouse.getLandlordId());
+            house.setAddress(updatedHouse.getAddress());
+            house.setMaxOccupant(updatedHouse.getMaxOccupant());
+            house.setDescription(updatedHouse.getDescription());
+            houseService.updateHouse(house);
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "House updated successfully.");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteHouse(@PathVariable int id, Authentication authentication) {
