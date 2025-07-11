@@ -38,8 +38,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 Claims claims = jwtUtil.validateToken(token);
                 String username = claims.getSubject();
 
-                String role = claims.get("role", String.class);
-                String authority = role;
+                String role = claims.get("sub", String.class);
+                String authority = "ROLE_"+role;
                 List<SimpleGrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority(authority));
 
                 UsernamePasswordAuthenticationToken authentication =
