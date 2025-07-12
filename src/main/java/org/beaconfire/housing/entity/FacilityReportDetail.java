@@ -38,7 +38,7 @@ public class FacilityReportDetail {
     @NotNull(message = "Employee ID is required")
     @Size(max = 100, message = "Employee ID must not exceed 100 characters")
     @Column(name = "EmployeeID", nullable = false, length = 100)
-    private Integer employeeId;
+    private String employeeId;
 
     @NotBlank(message = "Comment is required")
     @Column(name = "Comment", nullable = false, columnDefinition = "TEXT")
