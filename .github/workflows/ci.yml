@@ -81,7 +81,7 @@ jobs:
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: mysecretpassword
       FRONTEND_URL: http://localhost:5172
-      BASE_URL: http://localhost:8082
+      BASE_URL: http://localhost:8084
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
