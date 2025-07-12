@@ -1,0 +1,34 @@
+server:
+  port: 8084
+
+spring:
+  cloud:
+    config:
+      discovery:
+        enabled: false
+  config:
+    import: optional:file:./config/,optional:classpath:/config/
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/HousingService?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: root
+    password: mysecretpassword
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: update
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+
+app:
+  jwt:
+    secret: NiXTYNwyutkwyp34w3TYjb297yYUZCaCmr3YhDdT0W4=
+    expiration-in-ms: 86400000
+  originsUrl: http://localhost:5172
+
+eureka:
+  client:
+    enabled: false
