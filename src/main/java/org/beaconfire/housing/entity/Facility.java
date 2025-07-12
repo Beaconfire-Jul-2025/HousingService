@@ -10,7 +10,8 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import java.security.Timestamp;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,7 +19,8 @@ import java.util.List;
 @Table(name = "Facility",
         indexes = {
                 @Index(name = "idx_house_id", columnList = "HouseID"),
-                @Index(name = "idx_type", columnList = "Type")
+                @Index(name = "idx_type", columnList = "Type"),
+                @Index(name = "idx_quantity", columnList = "Quantity")
         })
 @Data
 @NoArgsConstructor
@@ -29,10 +31,6 @@ public class Facility {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID")
     private Integer id;
-
-    @NotNull(message = "House ID is required")
-    @Column(name = "HouseID", nullable = false)
-    private Integer houseId;
 
     @NotBlank(message = "Facility type is required")
     @Size(max = 100, message = "Type must not exceed 100 characters")
@@ -47,23 +45,31 @@ public class Facility {
     @Column(name = "Description", columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "CreateDate",
-            updatable = false,
-            insertable = false,
-            columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @Column(name = "CreateDate", updatable = false, nullable = false)
     private Timestamp createDate;
 
-    @Column(name = "LastModificationDate",
-            insertable = false,
-            columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
+    @Column(name = "LastModificationDate", nullable = false)
     private Timestamp lastModificationDate;
 
     // Relationship with House
+    @NotNull(message = "House ID is required")
     @ManyToOne
-    @JoinColumn(name = "HouseID", nullable = false, insertable = false, updatable = false)
+    @JoinColumn(name = "HouseID", nullable = false)
     private House house;
 
     // Relationship with FacilityReport
     @OneToMany(mappedBy = "facility", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
     private List<FacilityReport> facilityReports = new ArrayList<>();
+
+    @PrePersist
+    public void prePersist() {
+        this.createDate = Timestamp.valueOf(LocalDateTime.now());
+        this.lastModificationDate = Timestamp.valueOf(LocalDateTime.now());
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        this.lastModificationDate = Timestamp.valueOf(LocalDateTime.now());
+    }
 }
