@@ -20,7 +20,18 @@ public class HousingController {
     private HouseService houseService;
 
 //    @GetMapping
-//    public ResponseEntity<?> getHouseById(@RequestBody int id, Authentication authentication) {
+//    public ResponseEntity<?> getAssignedHouse(@RequestBody int id, Authentication authentication) {
+//        // role validation
+//
+//        // mongodb
+//        // retrive HouseID from mongodb
+//        // retrive userIDs who have the same HouseID
+//        // retrive their names and phone
+//
+//        // mysql
+//        // retrive addr about the house
+//        // retrive open facility report
+//
 //
 //    }
 
@@ -29,7 +40,9 @@ public class HousingController {
         boolean isHr = authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_HR"));
         if (!isHr) {
-            return ResponseEntity.status(403).body("Only HR can create houses.");
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Only HR can create houses.");
+            return ResponseEntity.status(403).body(response);
         }
 
         House house = new House();
@@ -57,7 +70,9 @@ public class HousingController {
         boolean isHr = authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_HR"));
         if (!isHr) {
-            return ResponseEntity.status(403).body("Only HR can update houses.");
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Only HR can update houses.");
+            return ResponseEntity.status(403).body(response);
         }
 
         try {
@@ -84,7 +99,9 @@ public class HousingController {
         boolean isHr = authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_HR"));
         if (!isHr) {
-            return ResponseEntity.status(403).body("Only HR can delete houses.");
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Only HR can delete houses.");
+            return ResponseEntity.status(403).body(response);
         }
 
         try {
