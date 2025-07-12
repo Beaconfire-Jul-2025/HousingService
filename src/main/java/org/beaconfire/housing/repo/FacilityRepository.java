@@ -4,10 +4,11 @@ import org.beaconfire.housing.entity.Facility;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface FacilityRepository extends JpaRepository<Facility, Integer> {
 
-    // Find all facilities for a specific house
-    public List<Facility> findByHouseId(int houseId);
+    // Find facilities by house id and type (e.g. house id 1, type "Bedroom")
+    public Optional<Facility> findByHouseIdAndType(Integer houseId, String type);
 
 }

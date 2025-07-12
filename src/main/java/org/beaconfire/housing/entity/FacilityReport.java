@@ -31,7 +31,7 @@ public class FacilityReport {
     private Facility facility;
 
     @Column(name = "EmployeeID", nullable = false, length = 100) // to match var(100) in database
-    private Integer employeeId;
+    private String employeeId;
 
     @Column(name = "Title", nullable = false, length = 255) // to match var(255) in database
     private String title;
@@ -41,6 +41,9 @@ public class FacilityReport {
 
     @Column(name = "CreateDate", updatable = false, nullable = false)
     private Timestamp createDate;
+
+    @Column(name = "Status", nullable = false, length = 20)
+    private String status;
 
     @PrePersist
     public void prePersist() {
