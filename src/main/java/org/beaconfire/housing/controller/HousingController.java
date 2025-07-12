@@ -64,7 +64,7 @@ public class HousingController {
             // optional: if dont want duplicates, make the addr unique in db
         }
     }
-
+  
     @PutMapping("/{id}")
     public ResponseEntity<?> updateHouse(@PathVariable int id, @RequestBody HouseDTO updatedHouse, Authentication authentication) {
         boolean isHr = authentication.getAuthorities().stream()
