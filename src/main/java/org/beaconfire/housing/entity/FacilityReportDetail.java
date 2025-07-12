@@ -45,7 +45,6 @@ public class FacilityReportDetail {
     private String comment;
 
     @Column(name = "CreateDate", updatable = false, nullable = false)
-    @Builder.Default
     private Timestamp createDate;
 
     @PrePersist

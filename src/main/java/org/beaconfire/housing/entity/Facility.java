@@ -59,7 +59,6 @@ public class Facility {
 
     // Relationship with FacilityReport
     @OneToMany(mappedBy = "facility", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @Builder.Default
     private List<FacilityReport> facilityReports = new ArrayList<>();
 
     @PrePersist
