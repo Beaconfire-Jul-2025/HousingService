@@ -20,6 +20,16 @@ public class HouseService {
     }
 
     @Transactional
+    public void deleteHouseById(int id) {
+        houseRepository.deleteById(id);
+    }
+
+    @Transactional
+    public void updateHouse(House house) {
+        houseRepository.save(house);
+    }
+
+    @Transactional
     public List<House> getAllHouses() {
         return houseRepository.findAll();
     }
