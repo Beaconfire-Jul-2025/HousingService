@@ -82,6 +82,7 @@ jobs:
       SPRING_DATASOURCE_PASSWORD: mysecretpassword
       FRONTEND_URL: http://localhost:5172
       BASE_URL: http://localhost:8084
+      JWT_KEY: NiXTYNwyutkwyp34w3TYjb297yYUZCaCmr3YhDdT0W4=
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
