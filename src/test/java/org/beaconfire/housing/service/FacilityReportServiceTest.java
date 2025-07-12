@@ -57,7 +57,7 @@ class FacilityReportServiceTest {
         testReport = FacilityReport.builder()
                 .id(1)
                 .facility(testFacility)
-                .employeeId(123)
+                .employeeId("123")
                 .title("Broken Bed Frame")
                 .description("Bed frame is broken and needs replacement")
                 .status("Open")
@@ -75,7 +75,7 @@ class FacilityReportServiceTest {
     void createFacilityReport_Success() {
         // Given
         Integer houseId = 1;
-        Integer employeeId = 123;
+        String employeeId = "123";  // Changed to String
 
         when(facilityRepository.findByHouseIdAndType(houseId, "Bed"))
                 .thenReturn(Optional.of(testFacility));
@@ -101,7 +101,7 @@ class FacilityReportServiceTest {
         assertEquals("Broken Bed Frame", result.getTitle());
         assertEquals("Bed frame is broken and needs replacement", result.getDescription());
         assertEquals("Open", result.getStatus());
-        assertEquals(123, result.getCreatedBy());
+        assertEquals("123", result.getCreatedBy());
 
         // Verify interactions
         verify(facilityRepository, times(1)).findByHouseIdAndType(houseId, "Bed");
@@ -112,7 +112,7 @@ class FacilityReportServiceTest {
     void createFacilityReport_FacilityNotFound_ThrowsException() {
         // Given
         Integer houseId = 1;
-        Integer employeeId = 123;
+        String employeeId = "123";  // Changed to String
 
         when(facilityRepository.findByHouseIdAndType(houseId, "Bed"))
                 .thenReturn(Optional.empty());
@@ -147,7 +147,7 @@ class FacilityReportServiceTest {
         assertEquals("Broken Bed Frame", result.getTitle());
         assertEquals("Bed frame is broken and needs replacement", result.getDescription());
         assertEquals("Open", result.getStatus());
-        assertEquals(123, result.getCreatedBy());
+        assertEquals("123", result.getCreatedBy());  // Already expecting String
 
         verify(facilityReportRepository, times(1)).findById(reportId);
     }
@@ -173,7 +173,7 @@ class FacilityReportServiceTest {
     void createFacilityReport_VerifySavedReportFields() {
         // Given
         Integer houseId = 1;
-        Integer employeeId = 123;
+        String employeeId = "123";  // Changed to String
 
         when(facilityRepository.findByHouseIdAndType(houseId, "Bed"))
                 .thenReturn(Optional.of(testFacility));
@@ -228,10 +228,39 @@ class FacilityReportServiceTest {
 
             // Execute
             ReportDTO result = facilityReportService.createFacilityReport(
-                    1, createReportRequest, 123);
+                    1, createReportRequest, "123");  // Changed to String
 
             // Verify
             assertEquals(facilityType, result.getFacilityName());
         }
+    }
+
+    @Test
+    void createFacilityReport_WithMongoDBObjectId() {
+        // Given - using MongoDB ObjectId format
+        Integer houseId = 1;
+        String employeeId = "507f1f77bcf86cd799439011";  // MongoDB ObjectId format
+
+        when(facilityRepository.findByHouseIdAndType(houseId, "Bed"))
+                .thenReturn(Optional.of(testFacility));
+        when(facilityReportRepository.save(any(FacilityReport.class)))
+                .thenAnswer(invocation -> {
+                    FacilityReport savedReport = invocation.getArgument(0);
+                    savedReport.setId(1);
+                    savedReport.setCreateDate(new Timestamp(System.currentTimeMillis()));
+                    return savedReport;
+                });
+
+        // When
+        ReportDTO result = facilityReportService.createFacilityReport(
+                houseId, createReportRequest, employeeId);
+
+        // Then
+        assertNotNull(result);
+        assertEquals("507f1f77bcf86cd799439011", result.getCreatedBy());
+
+        verify(facilityReportRepository).save(argThat(report ->
+                report.getEmployeeId().equals("507f1f77bcf86cd799439011")
+        ));
     }
 }

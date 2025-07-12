@@ -1,13 +1,15 @@
 package org.beaconfire.housing.controller;
 
+import org.beaconfire.housing.dto.request.CreateReportRequestDTO;
+import org.beaconfire.housing.dto.response.CreateReportResponseDTO;
 import org.beaconfire.housing.dto.response.ReportDTO;
 import org.beaconfire.housing.service.FacilityReportService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/housing")
@@ -23,5 +25,26 @@ public class FacilityReportController {
     public ResponseEntity<ReportDTO> getFacilityReportById(@PathVariable Integer id) {
         ReportDTO report = facilityReportService.getFacilityReportById(id);
         return new ResponseEntity<>(report, HttpStatus.OK);
+    }
+
+    // create facility report for a house
+    @PostMapping("/{houseId}/facility-report")
+    public ResponseEntity<CreateReportResponseDTO> createFacilityReport(
+            @PathVariable Integer houseId,
+            @Valid @RequestBody CreateReportRequestDTO request,
+            Authentication authentication) {
+
+        // Get employeeId from request body
+        String employeeId = request.getEmployeeId();
+
+        ReportDTO report = facilityReportService.createFacilityReport(houseId, request, employeeId);
+
+        // response dto
+        CreateReportResponseDTO response = new CreateReportResponseDTO(
+                report.getId(),
+                "Facility report submitted"
+        );
+
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 }

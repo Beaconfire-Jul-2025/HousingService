@@ -25,7 +25,7 @@ public class FacilityReportService {
 
     // Create a new report
     @Transactional
-    public ReportDTO createFacilityReport(Integer houseId, CreateReportRequestDTO request, Integer employeeId) {
+    public ReportDTO createFacilityReport(Integer houseId, CreateReportRequestDTO request, String employeeId) {
         // Find facility by house and type
         Facility facility = facilityRepository.findByHouseIdAndType(houseId, request.getFacilityName())
                 .orElseThrow(() -> new FacilityNotFoundException(
@@ -68,4 +68,5 @@ public class FacilityReportService {
                 .createDate(report.getCreateDate())
                 .build();
     }
+
 }

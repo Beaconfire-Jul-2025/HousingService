@@ -22,6 +22,6 @@ public class CreateReportRequestDTO {
     @NotBlank(message = "Description is required")
     private String description;
 
-    @NotNull(message = "Employee ID is required")
-    private Integer employeeId;
+    @NotBlank(message = "Employee ID is required")
+    private String employeeId;
 }

@@ -17,6 +17,6 @@ public class ReportDTO {
     private String title;
     private String description;
     private String status;  // "OPEN", "IN_PROGRESS", "CLOSED"
-    private Integer createdBy;  // Employee ID who created it
+    private String createdBy;  // Employee ID who created it
     private Timestamp createDate;
 }

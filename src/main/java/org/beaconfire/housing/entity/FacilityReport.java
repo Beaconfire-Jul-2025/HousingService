@@ -31,7 +31,7 @@ public class FacilityReport {
     private Facility facility;
 
     @Column(name = "EmployeeID", nullable = false, length = 100) // to match var(100) in database
-    private Integer employeeId;
+    private String employeeId;
 
     @Column(name = "Title", nullable = false, length = 255) // to match var(255) in database
     private String title;
