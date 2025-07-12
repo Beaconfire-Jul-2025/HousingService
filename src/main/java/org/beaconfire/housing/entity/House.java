@@ -4,6 +4,7 @@ import lombok.Data;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "House")
@@ -26,9 +27,9 @@ public class House {
     @Column(name = "Description", columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "CreateDate", updatable = false, insertable = false)
+    @Column(name = "CreateDate", updatable = false)
     private Timestamp createDate;
 
-    @Column(name = "LastModificationDate", insertable = false)
+    @Column(name = "LastModificationDate")
     private Timestamp lastModificationDate;
 }
