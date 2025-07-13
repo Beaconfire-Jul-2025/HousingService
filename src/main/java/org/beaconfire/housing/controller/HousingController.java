@@ -98,7 +98,7 @@ public class HousingController {
         if (!hasRole(authentication, "ROLE_HR")) {
             Map<String, String> response = new HashMap<>();
             response.put("message", "Only HR can create houses.");
-            return ResponseEntity.status(403).body(response);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
         }
 
         House house = new House();
@@ -126,7 +126,7 @@ public class HousingController {
         if (!hasRole(authentication, "ROLE_HR")) {
             Map<String, String> response = new HashMap<>();
             response.put("message", "Only HR can update houses.");
-            return ResponseEntity.status(403).body(response);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
         }
 
         try {
@@ -153,7 +153,7 @@ public class HousingController {
         if (!hasRole(authentication, "ROLE_HR")) {
             Map<String, String> response = new HashMap<>();
             response.put("message", "Only HR can delete houses.");
-            return ResponseEntity.status(403).body(response);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
         }
 
         try {
