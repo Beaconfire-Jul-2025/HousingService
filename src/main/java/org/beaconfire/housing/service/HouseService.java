@@ -14,6 +14,13 @@ public class HouseService {
     @Autowired
     private HouseRepository houseRepository;
 
+    @Transactional(readOnly = true)
+    public String getAddressById(int houseId) {
+        return houseRepository.findById(houseId)
+                .map(House::getAddress)
+                .orElseThrow(() -> new IllegalArgumentException("House not found with ID: " + houseId));
+    }
+
     @Transactional
     public void createHouse(House house) {
         houseRepository.save(house);
