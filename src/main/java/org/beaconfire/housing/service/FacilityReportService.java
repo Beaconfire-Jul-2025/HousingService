@@ -98,6 +98,22 @@ public class FacilityReportService {
         return convertToReportDetailResponse(report, comments, lastModificationDate);
     }
 
+    // Add comment
+    public Integer addComment(Integer reportId, String employeeId, String description) {
+        // verify if the report exists
+        FacilityReport report = facilityReportRepository.findById(reportId)
+                .orElseThrow(() -> new ReportNotFoundException("Report not found"));
+        // create comments
+        FacilityReportDetail comment = FacilityReportDetail.builder()
+                .facilityReport(report)
+                .employeeId(employeeId)
+                .comment(description)
+                .build();
+        // save and return id
+        FacilityReportDetail savedComment = facilityReportDetailRepository.save(comment);
+        return savedComment.getId();
+    }
+
 
     // Helper function: Convert entity to DTO
     private ReportResponse convertToReportDTO(FacilityReport report) {
