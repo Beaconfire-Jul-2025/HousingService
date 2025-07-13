@@ -66,7 +66,7 @@ class FacilityReportServiceTest {
 
         // Setup create report request
         createReportRequest = new CreateReportRequestDTO();
-        createReportRequest.setFacilityName("Bed");
+        createReportRequest.setFacilityType("Bed");
         createReportRequest.setTitle("Broken Bed Frame");
         createReportRequest.setDescription("Bed frame is broken and needs replacement");
     }
@@ -214,7 +214,7 @@ class FacilityReportServiceTest {
             facility.setType(facilityType);
             facility.setHouse(house);
 
-            createReportRequest.setFacilityName(facilityType);
+            createReportRequest.setFacilityType(facilityType);
 
             when(facilityRepository.findByHouseIdAndType(1, facilityType))
                     .thenReturn(Optional.of(facility));

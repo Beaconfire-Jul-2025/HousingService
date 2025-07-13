@@ -27,9 +27,9 @@ public class FacilityReportService {
     @Transactional
     public ReportDTO createFacilityReport(Integer houseId, CreateReportRequestDTO request, String employeeId) {
         // Find facility by house and type
-        Facility facility = facilityRepository.findByHouseIdAndType(houseId, request.getFacilityName())
+        Facility facility = facilityRepository.findByHouseIdAndType(houseId, request.getFacilityType())
                 .orElseThrow(() -> new FacilityNotFoundException(
-                        "Facility " + request.getFacilityName() + " not found in this house"));
+                        "Facility " + request.getFacilityType() + " not found in this house"));
 
         // Create report
         FacilityReport facilityReport = FacilityReport.builder()

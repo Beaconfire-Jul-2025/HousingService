@@ -13,8 +13,8 @@ import javax.validation.constraints.NotNull;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CreateReportRequestDTO {
-    @NotBlank(message = "Facility Name is required")
-    private String facilityName;
+    @NotBlank(message = "Facility Type is required")
+    private String facilityType;
 
     @NotBlank(message = "Title is required")
     private String title;
@@ -24,4 +24,7 @@ public class CreateReportRequestDTO {
 
     @NotBlank(message = "Employee ID is required")
     private String employeeId;
+
+    @NotNull(message = "House ID is required")
+    private Integer houseId;
 }

@@ -28,13 +28,13 @@ public class FacilityReportController {
     }
 
     // create facility report for a house
-    @PostMapping("/{houseId}/facility-report")
+    @PostMapping("/facility-report")
     public ResponseEntity<CreateReportResponseDTO> createFacilityReport(
-            @PathVariable Integer houseId,
             @Valid @RequestBody CreateReportRequestDTO request,
             Authentication authentication) {
 
-        // Get employeeId from request body
+        // Get houseId, employeeId from request body
+        Integer houseId = request.getHouseId();
         String employeeId = request.getEmployeeId();
 
         ReportDTO report = facilityReportService.createFacilityReport(houseId, request, employeeId);
