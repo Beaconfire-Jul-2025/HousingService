@@ -1,7 +1,7 @@
 package org.beaconfire.housing.service;
 
-import org.beaconfire.housing.dto.request.CreateReportRequestDTO;
-import org.beaconfire.housing.dto.response.ReportDTO;
+import org.beaconfire.housing.dto.request.CreateReportRequest;
+import org.beaconfire.housing.dto.response.ReportResponse;
 import org.beaconfire.housing.entity.Facility;
 import org.beaconfire.housing.entity.FacilityReport;
 import org.beaconfire.housing.entity.House;
@@ -17,7 +17,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.sql.Timestamp;
-import java.time.Instant;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -38,7 +37,7 @@ class FacilityReportServiceTest {
 
     private Facility testFacility;
     private FacilityReport testReport;
-    private CreateReportRequestDTO createReportRequest;
+    private CreateReportRequest createReportRequest;
     private House testHouse;
 
     @BeforeEach
@@ -65,7 +64,7 @@ class FacilityReportServiceTest {
                 .build();
 
         // Setup create report request
-        createReportRequest = new CreateReportRequestDTO();
+        createReportRequest = new CreateReportRequest();
         createReportRequest.setFacilityType("Bed");
         createReportRequest.setTitle("Broken Bed Frame");
         createReportRequest.setDescription("Bed frame is broken and needs replacement");
@@ -91,13 +90,13 @@ class FacilityReportServiceTest {
                 });
 
         // When
-        ReportDTO result = facilityReportService.createFacilityReport(
+        ReportResponse result = facilityReportService.createFacilityReport(
                 houseId, createReportRequest, employeeId);
 
         // Then
         assertNotNull(result);
         assertEquals(1, result.getId());
-        assertEquals("Bed", result.getFacilityName());
+        assertEquals("Bed", result.getFacilityType());
         assertEquals("Broken Bed Frame", result.getTitle());
         assertEquals("Bed frame is broken and needs replacement", result.getDescription());
         assertEquals("Open", result.getStatus());
@@ -138,12 +137,12 @@ class FacilityReportServiceTest {
                 .thenReturn(Optional.of(testReport));
 
         // When
-        ReportDTO result = facilityReportService.getFacilityReportById(reportId);
+        ReportResponse result = facilityReportService.getFacilityReportById(reportId);
 
         // Then
         assertNotNull(result);
         assertEquals(1, result.getId());
-        assertEquals("Bed", result.getFacilityName());
+        assertEquals("Bed", result.getFacilityType());
         assertEquals("Broken Bed Frame", result.getTitle());
         assertEquals("Bed frame is broken and needs replacement", result.getDescription());
         assertEquals("Open", result.getStatus());
@@ -186,7 +185,7 @@ class FacilityReportServiceTest {
                 });
 
         // When
-        ReportDTO result = facilityReportService.createFacilityReport(
+        ReportResponse result = facilityReportService.createFacilityReport(
                 houseId, createReportRequest, employeeId);
 
         // Then
@@ -227,11 +226,11 @@ class FacilityReportServiceTest {
                     });
 
             // Execute
-            ReportDTO result = facilityReportService.createFacilityReport(
+            ReportResponse result = facilityReportService.createFacilityReport(
                     1, createReportRequest, "123");  // Changed to String
 
             // Verify
-            assertEquals(facilityType, result.getFacilityName());
+            assertEquals(facilityType, result.getFacilityType());
         }
     }
 
@@ -252,7 +251,7 @@ class FacilityReportServiceTest {
                 });
 
         // When
-        ReportDTO result = facilityReportService.createFacilityReport(
+        ReportResponse result = facilityReportService.createFacilityReport(
                 houseId, createReportRequest, employeeId);
 
         // Then

@@ -12,7 +12,7 @@ import javax.validation.constraints.NotNull;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class CreateReportRequestDTO {
+public class CreateReportRequest {
     @NotBlank(message = "Facility Type is required")
     private String facilityType;
 
