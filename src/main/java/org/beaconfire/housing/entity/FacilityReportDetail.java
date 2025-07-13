@@ -47,8 +47,16 @@ public class FacilityReportDetail {
     @Column(name = "CreateDate", updatable = false, nullable = false)
     private Timestamp createDate;
 
+    @Column(name = "LastModificationDate", nullable = false)
+    private Timestamp lastModificationDate;
+
     @PrePersist
     public void prePersist() {
         this.createDate = Timestamp.valueOf(LocalDateTime.now());
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        this.lastModificationDate = Timestamp.valueOf(LocalDateTime.now());
     }
 }

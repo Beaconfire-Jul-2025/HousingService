@@ -33,3 +33,8 @@ build/
 .vscode/
 
 .DS_Store
+src/main/java/org/beaconfire/housing/HousingApplication.java
+src/main/resources/application-dev.properties
+src/main/resources/application-dev.properties
+src/main/java/org/beaconfire/housing/HousingApplication.java
+/src/main/java/org/beaconfire/housing/HousingApplication.java

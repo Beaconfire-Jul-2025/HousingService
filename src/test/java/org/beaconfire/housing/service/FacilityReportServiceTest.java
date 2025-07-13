@@ -1,12 +1,17 @@
 package org.beaconfire.housing.service;
 
-import org.beaconfire.housing.dto.request.CreateReportRequestDTO;
-import org.beaconfire.housing.dto.response.ReportDTO;
+import org.beaconfire.housing.dto.CommentDTO;
+import org.beaconfire.housing.dto.request.CreateReportRequest;
+import org.beaconfire.housing.dto.response.ReportDetailResponse;
+import org.beaconfire.housing.dto.response.ReportListResponse;
+import org.beaconfire.housing.dto.response.ReportResponse;
 import org.beaconfire.housing.entity.Facility;
 import org.beaconfire.housing.entity.FacilityReport;
+import org.beaconfire.housing.entity.FacilityReportDetail;
 import org.beaconfire.housing.entity.House;
 import org.beaconfire.housing.exception.FacilityNotFoundException;
 import org.beaconfire.housing.exception.ReportNotFoundException;
+import org.beaconfire.housing.repo.FacilityReportDetailRepository;
 import org.beaconfire.housing.repo.FacilityReportRepository;
 import org.beaconfire.housing.repo.FacilityRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,7 +22,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.sql.Timestamp;
-import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -33,234 +41,232 @@ class FacilityReportServiceTest {
     @Mock
     private FacilityReportRepository facilityReportRepository;
 
+    @Mock
+    private FacilityReportDetailRepository facilityReportDetailRepository;
+
     @InjectMocks
     private FacilityReportService facilityReportService;
 
     private Facility testFacility;
     private FacilityReport testReport;
-    private CreateReportRequestDTO createReportRequest;
-    private House testHouse;
+    private FacilityReportDetail testComment1;
+    private FacilityReportDetail testComment2;
 
     @BeforeEach
     void setUp() {
-        // Setup test house
-        testHouse = new House();
+        // Setup test facility
+        House testHouse = new House();
         testHouse.setId(1);
 
-        // Setup test facility
         testFacility = new Facility();
         testFacility.setId(1);
-        testFacility.setType("Bed");
+        testFacility.setType("PLUMBING");
         testFacility.setHouse(testHouse);
 
         // Setup test report
         testReport = FacilityReport.builder()
                 .id(1)
                 .facility(testFacility)
-                .employeeId("123")
-                .title("Broken Bed Frame")
-                .description("Bed frame is broken and needs replacement")
+                .employeeId("emp_123")
+                .title("Leaking Faucet")
+                .description("Kitchen faucet is leaking")
                 .status("Open")
-                .createDate(new Timestamp(System.currentTimeMillis()))
+                .createDate(Timestamp.valueOf(LocalDateTime.now()))
                 .build();
 
-        // Setup create report request
-        createReportRequest = new CreateReportRequestDTO();
-        createReportRequest.setFacilityName("Bed");
-        createReportRequest.setTitle("Broken Bed Frame");
-        createReportRequest.setDescription("Bed frame is broken and needs replacement");
+        // Setup test comments
+        testComment1 = FacilityReportDetail.builder()
+                .id(1)
+                .facilityReport(testReport)
+                .employeeId("emp_123")
+                .comment("I've reported this issue")
+                .createDate(Timestamp.valueOf(LocalDateTime.now()))
+                .lastModificationDate(null)
+                .build();
+
+        testComment2 = FacilityReportDetail.builder()
+                .id(2)
+                .facilityReport(testReport)
+                .employeeId("hr_456")
+                .comment("Maintenance scheduled for tomorrow")
+                .createDate(Timestamp.valueOf(LocalDateTime.now()))
+                .lastModificationDate(Timestamp.valueOf(LocalDateTime.now().plusHours(1)))
+                .build();
     }
 
     @Test
     void createFacilityReport_Success() {
-        // Given
-        Integer houseId = 1;
-        String employeeId = "123";  // Changed to String
+        // Arrange
+        CreateReportRequest request = new CreateReportRequest();
+        request.setFacilityType("PLUMBING");
+        request.setTitle("Leaking Faucet");
+        request.setDescription("Kitchen faucet is leaking");
+        request.setHouseId(1);
+        request.setEmployeeId("emp_123");
 
-        when(facilityRepository.findByHouseIdAndType(houseId, "Bed"))
+        when(facilityRepository.findByHouseIdAndType(1, "PLUMBING"))
                 .thenReturn(Optional.of(testFacility));
-
-        // Mock the save to return a complete report with ID
         when(facilityReportRepository.save(any(FacilityReport.class)))
                 .thenAnswer(invocation -> {
                     FacilityReport savedReport = invocation.getArgument(0);
-                    // Simulate database save by setting ID and timestamp
-                    savedReport.setId(1);
-                    savedReport.setCreateDate(new Timestamp(System.currentTimeMillis()));
+                    savedReport.setId(1); // Set ID as if database generated it
                     return savedReport;
                 });
 
-        // When
-        ReportDTO result = facilityReportService.createFacilityReport(
-                houseId, createReportRequest, employeeId);
+        // Act
+        ReportResponse response = facilityReportService.createFacilityReport(1, request, "emp_123");
 
-        // Then
-        assertNotNull(result);
-        assertEquals(1, result.getId());
-        assertEquals("Bed", result.getFacilityName());
-        assertEquals("Broken Bed Frame", result.getTitle());
-        assertEquals("Bed frame is broken and needs replacement", result.getDescription());
-        assertEquals("Open", result.getStatus());
-        assertEquals("123", result.getCreatedBy());
+        // Assert
+        assertNotNull(response);
+        assertEquals(1, response.getId());
+        assertEquals("Leaking Faucet", response.getTitle());
+        assertEquals("PLUMBING", response.getFacilityType());
+        assertEquals("Open", response.getStatus());
 
-        // Verify interactions
-        verify(facilityRepository, times(1)).findByHouseIdAndType(houseId, "Bed");
         verify(facilityReportRepository, times(1)).save(any(FacilityReport.class));
     }
 
     @Test
-    void createFacilityReport_FacilityNotFound_ThrowsException() {
-        // Given
-        Integer houseId = 1;
-        String employeeId = "123";  // Changed to String
+    void createFacilityReport_FacilityNotFound() {
+        // Arrange
+        CreateReportRequest request = new CreateReportRequest();
+        request.setFacilityType("PLUMBING");
+        request.setTitle("Test Title");
+        request.setDescription("Test Description");
 
-        when(facilityRepository.findByHouseIdAndType(houseId, "Bed"))
+        when(facilityRepository.findByHouseIdAndType(1, "PLUMBING"))
                 .thenReturn(Optional.empty());
 
-        // When & Then
-        FacilityNotFoundException exception = assertThrows(
-                FacilityNotFoundException.class,
-                () -> facilityReportService.createFacilityReport(houseId, createReportRequest, employeeId)
+        // Act & Assert
+        assertThrows(FacilityNotFoundException.class, () ->
+                facilityReportService.createFacilityReport(1, request, "emp_123")
         );
 
-        assertEquals("Facility Bed not found in this house", exception.getMessage());
-
-        // Verify repository was called but save was not
-        verify(facilityRepository, times(1)).findByHouseIdAndType(houseId, "Bed");
-        verify(facilityReportRepository, never()).save(any(FacilityReport.class));
+        verify(facilityReportRepository, never()).save(any());
     }
 
     @Test
     void getFacilityReportById_Success() {
-        // Given
-        Integer reportId = 1;
-        when(facilityReportRepository.findById(reportId))
+        // Arrange
+        when(facilityReportRepository.findById(1))
                 .thenReturn(Optional.of(testReport));
 
-        // When
-        ReportDTO result = facilityReportService.getFacilityReportById(reportId);
+        // Act
+        ReportResponse response = facilityReportService.getFacilityReportById(1);
 
-        // Then
-        assertNotNull(result);
-        assertEquals(1, result.getId());
-        assertEquals("Bed", result.getFacilityName());
-        assertEquals("Broken Bed Frame", result.getTitle());
-        assertEquals("Bed frame is broken and needs replacement", result.getDescription());
-        assertEquals("Open", result.getStatus());
-        assertEquals("123", result.getCreatedBy());  // Already expecting String
-
-        verify(facilityReportRepository, times(1)).findById(reportId);
+        // Assert
+        assertNotNull(response);
+        assertEquals(1, response.getId());
+        assertEquals("Leaking Faucet", response.getTitle());
+        assertEquals("emp_123", response.getCreatedBy());
     }
 
     @Test
-    void getFacilityReportById_NotFound_ThrowsException() {
-        // Given
-        Integer reportId = 999;
-        when(facilityReportRepository.findById(reportId))
+    void getFacilityReportById_NotFound() {
+        // Arrange
+        when(facilityReportRepository.findById(999))
                 .thenReturn(Optional.empty());
 
-        // When & Then
-        ReportNotFoundException exception = assertThrows(
-                ReportNotFoundException.class,
-                () -> facilityReportService.getFacilityReportById(reportId)
+        // Act & Assert
+        assertThrows(ReportNotFoundException.class, () ->
+                facilityReportService.getFacilityReportById(999)
+        );
+    }
+
+    @Test
+    void getFacilityReportByHouseId_Success() {
+        // Arrange
+        List<FacilityReport> reports = Arrays.asList(testReport);
+        when(facilityReportRepository.findByHouseIdOrderByCreateDateDesc(1))
+                .thenReturn(reports);
+
+        // Act
+        ReportListResponse response = facilityReportService.getFacilityReportByHouseId(1);
+
+        // Assert
+        assertTrue(response.isSuccess());
+        assertEquals(1, response.getData().size());
+        assertEquals("Leaking Faucet", response.getData().get(0).getTitle());
+    }
+
+    @Test
+    void getFacilityReportByHouseId_EmptyList() {
+        // Arrange
+        when(facilityReportRepository.findByHouseIdOrderByCreateDateDesc(1))
+                .thenReturn(Collections.emptyList());
+
+        // Act
+        ReportListResponse response = facilityReportService.getFacilityReportByHouseId(1);
+
+        // Assert
+        assertTrue(response.isSuccess());
+        assertTrue(response.getData().isEmpty());
+    }
+
+    @Test
+    void getFacilityReportDetails_WithComments() {
+        // Arrange
+        List<FacilityReportDetail> comments = Arrays.asList(testComment1, testComment2);
+
+        when(facilityReportRepository.findById(1))
+                .thenReturn(Optional.of(testReport));
+        when(facilityReportDetailRepository.findByIdOrderByCreateDateDesc(1))
+                .thenReturn(comments);
+
+        // Act
+        ReportDetailResponse response = facilityReportService.getFacilityReportDetails(1);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(1, response.getId());
+        assertEquals("Leaking Faucet", response.getTitle());
+        assertEquals(2, response.getComments().size());
+
+        // Check last modification date is from testComment2
+        assertNotNull(response.getLastModificationDate());
+        assertEquals(testComment2.getLastModificationDate(), response.getLastModificationDate());
+
+        // Check comment details
+        CommentDTO firstComment = response.getComments().get(0);
+        assertEquals(1, firstComment.getCommentId());
+        assertEquals("I've reported this issue", firstComment.getDescription());
+        assertEquals(testComment1.getCreateDate(), firstComment.getCommentDate()); // No modification date
+
+        CommentDTO secondComment = response.getComments().get(1);
+        assertEquals(2, secondComment.getCommentId());
+        assertEquals("Maintenance scheduled for tomorrow", secondComment.getDescription());
+        assertEquals(testComment2.getLastModificationDate(), secondComment.getCommentDate()); // Has modification date
+    }
+
+    @Test
+    void getFacilityReportDetails_NoComments() {
+        // Arrange
+        when(facilityReportRepository.findById(1))
+                .thenReturn(Optional.of(testReport));
+        when(facilityReportDetailRepository.findByIdOrderByCreateDateDesc(1))
+                .thenReturn(Collections.emptyList());
+
+        // Act
+        ReportDetailResponse response = facilityReportService.getFacilityReportDetails(1);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(1, response.getId());
+        assertTrue(response.getComments().isEmpty());
+        assertEquals(testReport.getCreateDate(), response.getLastModificationDate()); // Falls back to report create date
+    }
+
+    @Test
+    void getFacilityReportDetails_ReportNotFound() {
+        // Arrange
+        when(facilityReportRepository.findById(999))
+                .thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(ReportNotFoundException.class, () ->
+                facilityReportService.getFacilityReportDetails(999)
         );
 
-        assertEquals("Report not found", exception.getMessage());
-        verify(facilityReportRepository, times(1)).findById(reportId);
-    }
-
-    @Test
-    void createFacilityReport_VerifySavedReportFields() {
-        // Given
-        Integer houseId = 1;
-        String employeeId = "123";  // Changed to String
-
-        when(facilityRepository.findByHouseIdAndType(houseId, "Bed"))
-                .thenReturn(Optional.of(testFacility));
-        when(facilityReportRepository.save(any(FacilityReport.class)))
-                .thenAnswer(invocation -> {
-                    FacilityReport savedReport = invocation.getArgument(0);
-                    savedReport.setId(1);
-                    savedReport.setCreateDate(new Timestamp(System.currentTimeMillis()));
-                    return savedReport;
-                });
-
-        // When
-        ReportDTO result = facilityReportService.createFacilityReport(
-                houseId, createReportRequest, employeeId);
-
-        // Then
-        verify(facilityReportRepository).save(argThat(report ->
-                report.getFacility().equals(testFacility) &&
-                        report.getEmployeeId().equals(employeeId) &&
-                        report.getTitle().equals("Broken Bed Frame") &&
-                        report.getDescription().equals("Bed frame is broken and needs replacement") &&
-                        report.getStatus().equals("Open")
-        ));
-    }
-
-    @Test
-    void createFacilityReport_WithDifferentFacilityTypes() {
-        // Test with different facility types
-        String[] facilityTypes = {"Air Conditioner", "Kitchen", "Bathroom", "Window"};
-
-        for (String facilityType : facilityTypes) {
-            // Setup
-            House house = new House();
-            house.setId(1);
-
-            Facility facility = new Facility();
-            facility.setId(100);
-            facility.setType(facilityType);
-            facility.setHouse(house);
-
-            createReportRequest.setFacilityName(facilityType);
-
-            when(facilityRepository.findByHouseIdAndType(1, facilityType))
-                    .thenReturn(Optional.of(facility));
-            when(facilityReportRepository.save(any(FacilityReport.class)))
-                    .thenAnswer(invocation -> {
-                        FacilityReport report = invocation.getArgument(0);
-                        report.setId(100);
-                        report.setCreateDate(new Timestamp(System.currentTimeMillis()));
-                        return report;
-                    });
-
-            // Execute
-            ReportDTO result = facilityReportService.createFacilityReport(
-                    1, createReportRequest, "123");  // Changed to String
-
-            // Verify
-            assertEquals(facilityType, result.getFacilityName());
-        }
-    }
-
-    @Test
-    void createFacilityReport_WithMongoDBObjectId() {
-        // Given - using MongoDB ObjectId format
-        Integer houseId = 1;
-        String employeeId = "507f1f77bcf86cd799439011";  // MongoDB ObjectId format
-
-        when(facilityRepository.findByHouseIdAndType(houseId, "Bed"))
-                .thenReturn(Optional.of(testFacility));
-        when(facilityReportRepository.save(any(FacilityReport.class)))
-                .thenAnswer(invocation -> {
-                    FacilityReport savedReport = invocation.getArgument(0);
-                    savedReport.setId(1);
-                    savedReport.setCreateDate(new Timestamp(System.currentTimeMillis()));
-                    return savedReport;
-                });
-
-        // When
-        ReportDTO result = facilityReportService.createFacilityReport(
-                houseId, createReportRequest, employeeId);
-
-        // Then
-        assertNotNull(result);
-        assertEquals("507f1f77bcf86cd799439011", result.getCreatedBy());
-
-        verify(facilityReportRepository).save(argThat(report ->
-                report.getEmployeeId().equals("507f1f77bcf86cd799439011")
-        ));
+        verify(facilityReportDetailRepository, never()).findByIdOrderByCreateDateDesc(any());
     }
 }

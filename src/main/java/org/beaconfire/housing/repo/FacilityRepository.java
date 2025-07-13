@@ -2,10 +2,12 @@ package org.beaconfire.housing.repo;
 
 import org.beaconfire.housing.entity.Facility;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
+@Repository
 public interface FacilityRepository extends JpaRepository<Facility, Integer> {
 
     // Find facilities by house id and type (e.g. house id 1, type "Bedroom")
