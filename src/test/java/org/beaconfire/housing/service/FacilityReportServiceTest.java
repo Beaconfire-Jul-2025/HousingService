@@ -1,7 +1,6 @@
 package org.beaconfire.housing.service;
 
 import org.beaconfire.housing.dto.CommentDTO;
-import org.beaconfire.housing.dto.request.CreateCommentRequest;
 import org.beaconfire.housing.dto.request.CreateReportRequest;
 import org.beaconfire.housing.dto.response.ReportDetailResponse;
 import org.beaconfire.housing.dto.response.ReportListResponse;
@@ -18,10 +17,10 @@ import org.beaconfire.housing.repo.FacilityRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.test.context.support.WithMockUser;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -285,9 +284,9 @@ class FacilityReportServiceTest {
         when(facilityReportDetailRepository.save(any(FacilityReportDetail.class)))
                 .thenAnswer(invocation -> {
                     FacilityReportDetail savedComment = invocation.getArgument(0);
+                    savedComment.prePersist();
                     savedComment.setId(3); // Set ID as if database generated it
-                    // Simulate database/JPA setting the createDate
-                    savedComment.setCreateDate(Timestamp.valueOf(LocalDateTime.now()));
+                    // @PrePersist has already set both timestamps
                     return savedComment;
                 });
 
@@ -300,17 +299,21 @@ class FacilityReportServiceTest {
 
         verify(facilityReportRepository, times(1)).findById(reportId);
 
-        // Verify the comment is saved with correct fields
-        verify(facilityReportDetailRepository, times(1)).save(argThat(comment -> {
-            // Verify all fields are set correctly when passed to save
-            assertEquals(reportId, comment.getFacilityReport().getId());
-            assertEquals(employeeId, comment.getEmployeeId());
-            assertEquals(description, comment.getComment());
-            // For a new comment, lastModificationDate should be null
-            assertNull(comment.getLastModificationDate());
-            // Note: createDate might be null here if set by @PrePersist or database
-            return true;
-        }));
+        // Capture the saved entity
+        ArgumentCaptor<FacilityReportDetail> captor = ArgumentCaptor.forClass(FacilityReportDetail.class);
+        verify(facilityReportDetailRepository, times(1)).save(captor.capture());
+
+        FacilityReportDetail savedDetail = captor.getValue();
+        assertEquals(reportId, savedDetail.getFacilityReport().getId());
+        assertEquals(employeeId, savedDetail.getEmployeeId());
+        assertEquals(description, savedDetail.getComment());
+
+        // @PrePersist sets both timestamps before save
+        assertNotNull(savedDetail.getCreateDate());
+        assertNotNull(savedDetail.getLastModificationDate());
+
+        // Both timestamps should be equal for a new comment
+        assertEquals(savedDetail.getCreateDate(), savedDetail.getLastModificationDate());
     }
 
     @Test
