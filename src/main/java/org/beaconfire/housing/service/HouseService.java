@@ -40,4 +40,8 @@ public class HouseService {
     public List<House> getAllHouses() {
         return houseRepository.findAll();
     }
+
+    public boolean houseExists(int houseId) {
+        return houseRepository.existsById(houseId);
+    }
 }

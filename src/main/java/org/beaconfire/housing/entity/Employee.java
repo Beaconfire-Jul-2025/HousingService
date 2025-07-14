@@ -12,9 +12,10 @@ public class Employee {
     private String id;
 
     private String userId;
-    private Integer houseId;
+    private String houseId;
     private String firstName;
     private String lastName;
     private String preferredName;
     private String cellPhone;
+    private String email;
 }

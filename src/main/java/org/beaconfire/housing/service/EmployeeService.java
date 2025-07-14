@@ -1,6 +1,7 @@
 package org.beaconfire.housing.service;
 
 import org.beaconfire.housing.entity.Employee;
+import org.beaconfire.housing.exception.UserNotFoundException;
 import org.beaconfire.housing.repo.EmployeeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,10 +15,10 @@ public class EmployeeService {
     @Autowired
     private EmployeeRepository employeeRepository;
 
-    public Integer getHouseIdByUserId(String userId) {
+    public String getHouseIdByUserId(String userId) {
         return employeeRepository.findByUserId(userId)
                 .map(Employee::getHouseId)
-                .orElseThrow(() -> new IllegalArgumentException("No employee found for userId: " + userId));
+                .orElseThrow(() -> new UserNotFoundException("No employee found for userId: " + userId.toString()));
     }
 
     public List<Employee> getUserIdsByHouseId(Integer houseId) {
@@ -26,10 +27,15 @@ public class EmployeeService {
                 .collect(Collectors.toList());
     }
 
-    public void updateHouseId(String userId, Integer newHouseId) {
-        employeeRepository.findByUserId(userId).ifPresent(employee -> {
-            employee.setHouseId(newHouseId);
-            employeeRepository.save(employee);
-        });
+    public Employee getEmployeeByUserId(String userId) {
+        return employeeRepository.findByUserId(userId)
+                .orElseThrow(() -> new UserNotFoundException("No employee found for userId: " + userId.toString()));
+    }
+
+    public void updateHouseId(String userId, String newHouseId) {
+        Employee employee = employeeRepository.findByUserId(userId)
+                .orElseThrow(() -> new UserNotFoundException("No employee found for userId: " + userId));
+        employee.setHouseId(newHouseId);
+        employeeRepository.save(employee);
     }
 }

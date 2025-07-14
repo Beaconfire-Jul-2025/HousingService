@@ -1,9 +1,12 @@
 package org.beaconfire.housing.controller;
 
 
+import org.beaconfire.housing.dto.AssignRequest;
 import org.beaconfire.housing.dto.HouseDTO;
 import org.beaconfire.housing.entity.Employee;
 import org.beaconfire.housing.entity.House;
+import org.beaconfire.housing.exception.UserNotFoundException;
+import org.beaconfire.housing.messaging.HouseAssignProducer;
 import org.beaconfire.housing.service.EmployeeService;
 import org.beaconfire.housing.service.HouseService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +30,9 @@ public class HousingController {
 
     @Autowired
     private EmployeeService employeeService;
+
+    @Autowired
+    private HouseAssignProducer houseAssignProducer;
 
     // Role Check
     private boolean hasRole(Authentication auth, String role) {
@@ -52,7 +58,7 @@ public class HousingController {
         List<Map<String, String>> tenantInfoList;
         try{
             // retrieve HouseId by UserId from mongodb
-            houseId = employeeService.getHouseIdByUserId(userId);
+            houseId = Integer.valueOf(employeeService.getHouseIdByUserId(userId));
             if (houseId == null) {
                 Map<String, String> response = new HashMap<>();
                 response.put("message", "No house assigned.");
@@ -71,7 +77,7 @@ public class HousingController {
                 return info;
             }).collect(Collectors.toList());
         }
-        catch (IllegalArgumentException e){
+        catch (UserNotFoundException e){
             Map<String, String> response = new HashMap<>();
             response.put("message", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
@@ -82,7 +88,7 @@ public class HousingController {
         try {
             address = houseService.getAddressById(houseId);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("House not found for ID: " + houseId);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
 
         Map<String, Object> result = new HashMap<>();
@@ -166,5 +172,53 @@ public class HousingController {
             response.put("message", e.getMessage());
             return ResponseEntity.badRequest().body(response);
         }
+    }
+
+    @PostMapping("/assign")
+    public ResponseEntity<?> assignHouse(@RequestBody AssignRequest req, Authentication authentication) {
+        boolean isHr = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_HR"));
+        if (!isHr) {
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Only HR can assign housing.");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+        }
+        String houseId = req.getHouseId();
+        String userId = req.getUserId();
+
+        // check if houseId exists
+        if (!houseService.houseExists(Integer.parseInt(houseId))) {
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "House with ID " + houseId + " does not exist.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        // update mongodb houseid
+        try{
+            employeeService.updateHouseId(userId, houseId);
+        }
+        catch (UserNotFoundException e){
+            Map<String, String> response = new HashMap<>();
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        // get user email for rabbitMQ
+        try{
+            Employee employee = employeeService.getEmployeeByUserId(userId);
+            houseAssignProducer.sendAssignmentMessage(employee.getEmail(), userId, houseId);
+        }
+        catch (UserNotFoundException e){
+            Map<String, String> response = new HashMap<>();
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "House assigned successfully.");
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+
+
     }
 }
