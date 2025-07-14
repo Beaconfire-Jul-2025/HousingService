@@ -135,7 +135,7 @@ public class HousingController {
 //
 //    }
 
-    @GetMapping("/all")
+    @GetMapping
     public ResponseEntity<?> getAllHouses(
             Authentication authentication,
             @RequestParam(defaultValue = "0") int page,

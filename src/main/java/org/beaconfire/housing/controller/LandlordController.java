@@ -19,7 +19,7 @@ public class LandlordController {
     @Autowired
     private LandlordService landlordService;
 
-    @GetMapping("/all")
+    @GetMapping
     public ResponseEntity<Page<Landlord>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
