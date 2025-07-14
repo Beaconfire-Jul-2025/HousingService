@@ -20,6 +20,14 @@ public class HeaderAuthenticationFilter extends OncePerRequestFilter {
       javax.servlet.http.HttpServletResponse response,
       javax.servlet.FilterChain filterChain)
       throws javax.servlet.ServletException, java.io.IOException {
+
+    // Skip authentication for health checks
+    String path = request.getRequestURI();
+    if (path.startsWith("/actuator/health")) {
+      filterChain.doFilter(request, response);
+      return;
+    }
+
     String userId = request.getHeader("x-User-Id");
     String username = request.getHeader("x-Username");
     String rolesHeader = request.getHeader("x-Roles");
