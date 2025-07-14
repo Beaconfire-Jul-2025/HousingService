@@ -28,11 +28,11 @@ public class HousingController {
     @Autowired
     private HouseService houseService;
 
-    @Autowired
-    private EmployeeService employeeService;
-
-    @Autowired
-    private HouseAssignProducer houseAssignProducer;
+//    @Autowired
+//    private EmployeeService employeeService;
+//
+//    @Autowired
+//    private HouseAssignProducer houseAssignProducer;
 
     // Role Check
     private boolean hasRole(Authentication auth, String role) {
@@ -40,110 +40,110 @@ public class HousingController {
                 .anyMatch(a -> role.equals(a.getAuthority()));
     }
 
-    @GetMapping
-    public ResponseEntity<?> getAssignedHouse(Authentication authentication) {
-        // role validation
-        boolean isHr = hasRole(authentication, "ROLE_HR");
-        boolean isEmployee = hasRole(authentication, "ROLE_EMPLOYEE");
+//    @GetMapping
+//    public ResponseEntity<?> getAssignedHouse(Authentication authentication) {
+//        // role validation
+//        boolean isHr = hasRole(authentication, "ROLE_HR");
+//        boolean isEmployee = hasRole(authentication, "ROLE_EMPLOYEE");
+//
+//
+//        if (!(isHr || isEmployee)) {
+//            Map<String, String> response = new HashMap<>();
+//            response.put("message", "Unauthorized access.");
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+//        }
+//
+//        String userId = authentication.getName();
+//        Integer houseId;
+//        List<Map<String, String>> tenantInfoList;
+//        try{
+//            // retrieve HouseId by UserId from mongodb
+//            houseId = Integer.valueOf(employeeService.getHouseIdByUserId(userId));
+//            if (houseId == null) {
+//                Map<String, String> response = new HashMap<>();
+//                response.put("message", "No house assigned.");
+//                return ResponseEntity.status(HttpStatus.NO_CONTENT).body(response);
+//            }
+//
+//            // retrieve users who have the same HouseID
+//            List<Employee> tenants = employeeService.getUserIdsByHouseId(houseId);
+//
+//            tenantInfoList = tenants.stream().map(emp -> {
+//                Map<String, String> info = new HashMap<>();
+//                String name = (emp.getPreferredName() != null) ? emp.getPreferredName() : emp.getFirstName();
+//                info.put("name", name);
+//                info.put("lastName", emp.getLastName());
+//                info.put("cellPhone", emp.getCellPhone() != null ? emp.getCellPhone() : "Not Available");
+//                return info;
+//            }).collect(Collectors.toList());
+//        }
+//        catch (UserNotFoundException e){
+//            Map<String, String> response = new HashMap<>();
+//            response.put("message", e.getMessage());
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+//        }
+//
+//        // retrieve addr about the house
+//        String address;
+//        try {
+//            address = houseService.getHouseById(houseId).getAddress();
+//        } catch (IllegalArgumentException e) {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+//        }
+//
+//        Map<String, Object> result = new HashMap<>();
+//        result.put("houseId", houseId);
+//        result.put("address", address);
+//        result.put("tenants", tenantInfoList);
+//        return ResponseEntity.ok(result);
+//
+//    }
 
-
-        if (!(isHr || isEmployee)) {
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Unauthorized access.");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-        }
-
-        String userId = authentication.getName();
-        Integer houseId;
-        List<Map<String, String>> tenantInfoList;
-        try{
-            // retrieve HouseId by UserId from mongodb
-            houseId = Integer.valueOf(employeeService.getHouseIdByUserId(userId));
-            if (houseId == null) {
-                Map<String, String> response = new HashMap<>();
-                response.put("message", "No house assigned.");
-                return ResponseEntity.status(HttpStatus.NO_CONTENT).body(response);
-            }
-
-            // retrieve users who have the same HouseID
-            List<Employee> tenants = employeeService.getUserIdsByHouseId(houseId);
-
-            tenantInfoList = tenants.stream().map(emp -> {
-                Map<String, String> info = new HashMap<>();
-                String name = (emp.getPreferredName() != null) ? emp.getPreferredName() : emp.getFirstName();
-                info.put("name", name);
-                info.put("lastName", emp.getLastName());
-                info.put("cellPhone", emp.getCellPhone() != null ? emp.getCellPhone() : "Not Available");
-                return info;
-            }).collect(Collectors.toList());
-        }
-        catch (UserNotFoundException e){
-            Map<String, String> response = new HashMap<>();
-            response.put("message", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        }
-
-        // retrieve addr about the house
-        String address;
-        try {
-            address = houseService.getHouseById(houseId).getAddress();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
-
-        Map<String, Object> result = new HashMap<>();
-        result.put("houseId", houseId);
-        result.put("address", address);
-        result.put("tenants", tenantInfoList);
-        return ResponseEntity.ok(result);
-
-    }
-
-    @PostMapping("/assign")
-    public ResponseEntity<?> assignHouse(@RequestBody AssignRequest req, Authentication authentication) {
-        boolean isHr = authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_HR"));
-        if (!isHr) {
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Only HR can assign housing.");
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
-        }
-        String houseId = req.getHouseId();
-        String userId = req.getUserId();
-
-        // check if houseId exists
-        if (!houseService.houseExists(Integer.parseInt(houseId))) {
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "House with ID " + houseId + " does not exist.");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        }
-
-        // update mongodb houseid
-        try{
-            employeeService.updateHouseId(userId, houseId);
-        }
-        catch (UserNotFoundException e){
-            Map<String, String> response = new HashMap<>();
-            response.put("message", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        }
-
-        // get user email and send to rabbitMQ
-        try{
-            Employee employee = employeeService.getEmployeeByUserId(userId);
-            houseAssignProducer.sendAssignmentMessage(employee.getEmail(), userId, houseId);
-        }
-        catch (UserNotFoundException e){
-            Map<String, String> response = new HashMap<>();
-            response.put("message", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        }
-
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "House assigned successfully.");
-        return ResponseEntity.status(HttpStatus.OK).body(response);
-
-    }
+//    @PostMapping("/assign")
+//    public ResponseEntity<?> assignHouse(@RequestBody AssignRequest req, Authentication authentication) {
+//        boolean isHr = authentication.getAuthorities().stream()
+//                .anyMatch(a -> a.getAuthority().equals("ROLE_HR"));
+//        if (!isHr) {
+//            Map<String, String> response = new HashMap<>();
+//            response.put("message", "Only HR can assign housing.");
+//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+//        }
+//        String houseId = req.getHouseId();
+//        String userId = req.getUserId();
+//
+//        // check if houseId exists
+//        if (!houseService.houseExists(Integer.parseInt(houseId))) {
+//            Map<String, String> response = new HashMap<>();
+//            response.put("message", "House with ID " + houseId + " does not exist.");
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+//        }
+//
+//        // update mongodb houseid
+//        try{
+//            employeeService.updateHouseId(userId, houseId);
+//        }
+//        catch (UserNotFoundException e){
+//            Map<String, String> response = new HashMap<>();
+//            response.put("message", e.getMessage());
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+//        }
+//
+//        // get user email and send to rabbitMQ
+//        try{
+//            Employee employee = employeeService.getEmployeeByUserId(userId);
+//            houseAssignProducer.sendAssignmentMessage(employee.getEmail(), userId, houseId);
+//        }
+//        catch (UserNotFoundException e){
+//            Map<String, String> response = new HashMap<>();
+//            response.put("message", e.getMessage());
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+//        }
+//
+//        Map<String, String> response = new HashMap<>();
+//        response.put("message", "House assigned successfully.");
+//        return ResponseEntity.status(HttpStatus.OK).body(response);
+//
+//    }
 
     @GetMapping("/all")
     public ResponseEntity<?> getAllHouses(Authentication authentication) {
