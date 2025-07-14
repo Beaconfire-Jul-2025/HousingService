@@ -17,6 +17,7 @@ import org.beaconfire.housing.repo.FacilityRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -269,4 +270,68 @@ class FacilityReportServiceTest {
 
         verify(facilityReportDetailRepository, never()).findByIdOrderByCreateDateDesc(any());
     }
+
+    @Test
+    void addComment_Success() {
+        // Arrange
+        Integer reportId = 1;
+        String employeeId = "emp_456";
+        String description = "This issue needs urgent attention";
+
+        when(facilityReportRepository.findById(reportId))
+                .thenReturn(Optional.of(testReport));
+
+        when(facilityReportDetailRepository.save(any(FacilityReportDetail.class)))
+                .thenAnswer(invocation -> {
+                    FacilityReportDetail savedComment = invocation.getArgument(0);
+                    savedComment.prePersist();
+                    savedComment.setId(3); // Set ID as if database generated it
+                    // @PrePersist has already set both timestamps
+                    return savedComment;
+                });
+
+        // Act
+        Integer commentId = facilityReportService.addComment(reportId, employeeId, description);
+
+        // Assert
+        assertNotNull(commentId);
+        assertEquals(3, commentId);
+
+        verify(facilityReportRepository, times(1)).findById(reportId);
+
+        // Capture the saved entity
+        ArgumentCaptor<FacilityReportDetail> captor = ArgumentCaptor.forClass(FacilityReportDetail.class);
+        verify(facilityReportDetailRepository, times(1)).save(captor.capture());
+
+        FacilityReportDetail savedDetail = captor.getValue();
+        assertEquals(reportId, savedDetail.getFacilityReport().getId());
+        assertEquals(employeeId, savedDetail.getEmployeeId());
+        assertEquals(description, savedDetail.getComment());
+
+        // @PrePersist sets both timestamps before save
+        assertNotNull(savedDetail.getCreateDate());
+        assertNotNull(savedDetail.getLastModificationDate());
+
+        // Both timestamps should be equal for a new comment
+        assertEquals(savedDetail.getCreateDate(), savedDetail.getLastModificationDate());
+    }
+
+    @Test
+    void addComment_ReportNotFound() {
+        // Arrange
+        Integer reportId = 999;
+        String employeeId = "emp_456";
+        String description = "Comment on non-existent report";
+
+        when(facilityReportRepository.findById(reportId))
+                .thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(ReportNotFoundException.class, () ->
+                facilityReportService.addComment(reportId, employeeId, description)
+        );
+
+        verify(facilityReportDetailRepository, never()).save(any());
+    }
+
 }

@@ -1,10 +1,8 @@
 package org.beaconfire.housing.controller;
 
+import org.beaconfire.housing.dto.request.CreateCommentRequest;
 import org.beaconfire.housing.dto.request.CreateReportRequest;
-import org.beaconfire.housing.dto.response.CreateReportResponse;
-import org.beaconfire.housing.dto.response.ReportDetailResponse;
-import org.beaconfire.housing.dto.response.ReportListResponse;
-import org.beaconfire.housing.dto.response.ReportResponse;
+import org.beaconfire.housing.dto.response.*;
 import org.beaconfire.housing.service.FacilityReportService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -61,6 +59,23 @@ public class FacilityReportController {
                 "Facility report submitted"
         );
 
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    // create comment for report
+    @PostMapping("/facility-report/{reportId}/comment")
+    public ResponseEntity<CreateCommentResponse> createComment(
+            @PathVariable Integer reportId,
+            @Valid @RequestBody CreateCommentRequest request,
+            Authentication authentication
+    ){
+        String employeeId = authentication.getPrincipal().toString();
+        Integer commentId = facilityReportService.addComment(reportId, employeeId, request.getDescription());
+
+        CreateCommentResponse response = new CreateCommentResponse(
+                commentId,
+                "Comment added successfully"
+        );
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 }
