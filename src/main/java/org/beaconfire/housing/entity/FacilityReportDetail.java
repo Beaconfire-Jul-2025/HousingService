@@ -38,7 +38,7 @@ public class FacilityReportDetail {
     @NotNull(message = "Employee ID is required")
     @Size(max = 100, message = "Employee ID must not exceed 100 characters")
     @Column(name = "EmployeeID", nullable = false, length = 100)
-    private Integer employeeId;
+    private String employeeId;
 
     @NotBlank(message = "Comment is required")
     @Column(name = "Comment", nullable = false, columnDefinition = "TEXT")
@@ -47,8 +47,18 @@ public class FacilityReportDetail {
     @Column(name = "CreateDate", updatable = false, nullable = false)
     private Timestamp createDate;
 
+    @Column(name = "LastModificationDate")
+    private Timestamp lastModificationDate;
+
     @PrePersist
     public void prePersist() {
-        this.createDate = Timestamp.valueOf(LocalDateTime.now());
+        Timestamp now = Timestamp.valueOf(LocalDateTime.now());
+        this.createDate = now;
+        this.lastModificationDate = now; // Set both on creation
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        this.lastModificationDate = Timestamp.valueOf(LocalDateTime.now());
     }
 }
