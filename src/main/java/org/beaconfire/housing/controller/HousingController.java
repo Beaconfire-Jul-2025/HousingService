@@ -1,13 +1,8 @@
 package org.beaconfire.housing.controller;
 
 
-import org.beaconfire.housing.dto.AssignRequest;
 import org.beaconfire.housing.dto.HouseDTO;
-import org.beaconfire.housing.entity.Employee;
 import org.beaconfire.housing.entity.House;
-import org.beaconfire.housing.exception.UserNotFoundException;
-import org.beaconfire.housing.messaging.HouseAssignProducer;
-import org.beaconfire.housing.service.EmployeeService;
 import org.beaconfire.housing.service.HouseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,7 +14,6 @@ import javax.validation.Valid;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/house")
