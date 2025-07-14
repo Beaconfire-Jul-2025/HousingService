@@ -1,5 +1,6 @@
 package org.beaconfire.housing.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,6 +29,7 @@ public class FacilityReport {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "FacilityID", nullable = false)
+    @JsonBackReference
     private Facility facility;
 
     @Column(name = "EmployeeID", nullable = false, length = 100) // to match var(100) in database
