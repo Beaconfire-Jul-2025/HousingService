@@ -22,8 +22,7 @@ public class SecurityConfig {
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http.csrf(AbstractHttpConfigurer::disable)
         .authorizeHttpRequests(authorize -> authorize
-                        .antMatchers("/actuator/health").permitAll()
-                        .anyRequest().permitAll())
+                .anyRequest().permitAll())
         .addFilterBefore(headerAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
         .formLogin(AbstractHttpConfigurer::disable)
         .httpBasic(AbstractHttpConfigurer::disable);

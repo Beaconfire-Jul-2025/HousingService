@@ -23,7 +23,7 @@ public class HeaderAuthenticationFilter extends OncePerRequestFilter {
 
     // Skip authentication for health checks
     String path = request.getRequestURI();
-    if (path.startsWith("/actuator/health")) {
+    if (path.startsWith("/actuator")) {
       filterChain.doFilter(request, response);
       return;
     }
