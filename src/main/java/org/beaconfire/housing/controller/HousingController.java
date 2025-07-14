@@ -86,7 +86,7 @@ public class HousingController {
         // retrieve addr about the house
         String address;
         try {
-            address = houseService.getAddressById(houseId);
+            address = houseService.getHouseById(houseId).getAddress();
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
@@ -97,6 +97,81 @@ public class HousingController {
         result.put("tenants", tenantInfoList);
         return ResponseEntity.ok(result);
 
+    }
+
+    @PostMapping("/assign")
+    public ResponseEntity<?> assignHouse(@RequestBody AssignRequest req, Authentication authentication) {
+        boolean isHr = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_HR"));
+        if (!isHr) {
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Only HR can assign housing.");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+        }
+        String houseId = req.getHouseId();
+        String userId = req.getUserId();
+
+        // check if houseId exists
+        if (!houseService.houseExists(Integer.parseInt(houseId))) {
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "House with ID " + houseId + " does not exist.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        // update mongodb houseid
+        try{
+            employeeService.updateHouseId(userId, houseId);
+        }
+        catch (UserNotFoundException e){
+            Map<String, String> response = new HashMap<>();
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        // get user email and send to rabbitMQ
+        try{
+            Employee employee = employeeService.getEmployeeByUserId(userId);
+            houseAssignProducer.sendAssignmentMessage(employee.getEmail(), userId, houseId);
+        }
+        catch (UserNotFoundException e){
+            Map<String, String> response = new HashMap<>();
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "House assigned successfully.");
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<?> getAllHouses(Authentication authentication) {
+        if (!hasRole(authentication, "ROLE_HR")) {
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Only HR can view all houses.");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+        }
+
+        List<House> houses = houseService.getAllHouses();
+        return ResponseEntity.ok(houses);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getHouseById(@PathVariable int id, Authentication authentication) {
+        if (!hasRole(authentication, "ROLE_HR")) {
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Only HR can view a house by ID.");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+        }
+        try {
+            House house = houseService.getHouseById(id);
+            return ResponseEntity.ok(house);
+        } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
     }
 
     @PostMapping
@@ -153,7 +228,6 @@ public class HousingController {
         }
     }
 
-
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteHouse(@PathVariable int id, Authentication authentication) {
         if (!hasRole(authentication, "ROLE_HR")) {
@@ -174,51 +248,4 @@ public class HousingController {
         }
     }
 
-    @PostMapping("/assign")
-    public ResponseEntity<?> assignHouse(@RequestBody AssignRequest req, Authentication authentication) {
-        boolean isHr = authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_HR"));
-        if (!isHr) {
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Only HR can assign housing.");
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
-        }
-        String houseId = req.getHouseId();
-        String userId = req.getUserId();
-
-        // check if houseId exists
-        if (!houseService.houseExists(Integer.parseInt(houseId))) {
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "House with ID " + houseId + " does not exist.");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        }
-
-        // update mongodb houseid
-        try{
-            employeeService.updateHouseId(userId, houseId);
-        }
-        catch (UserNotFoundException e){
-            Map<String, String> response = new HashMap<>();
-            response.put("message", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        }
-
-        // get user email for rabbitMQ
-        try{
-            Employee employee = employeeService.getEmployeeByUserId(userId);
-            houseAssignProducer.sendAssignmentMessage(employee.getEmail(), userId, houseId);
-        }
-        catch (UserNotFoundException e){
-            Map<String, String> response = new HashMap<>();
-            response.put("message", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        }
-
-
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "House assigned successfully.");
-        return ResponseEntity.status(HttpStatus.OK).body(response);
-
-
-    }
 }

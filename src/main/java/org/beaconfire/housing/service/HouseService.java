@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
 public class HouseService {
@@ -15,10 +16,9 @@ public class HouseService {
     private HouseRepository houseRepository;
 
     @Transactional(readOnly = true)
-    public String getAddressById(int houseId) {
-        return houseRepository.findById(houseId)
-                .map(House::getAddress)
-                .orElseThrow(() -> new IllegalArgumentException("House not found with ID: " + houseId));
+    public House getHouseById(int id) {
+        return houseRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("House with ID " + id + " not found."));
     }
 
     @Transactional
