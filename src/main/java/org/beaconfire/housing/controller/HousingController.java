@@ -22,19 +22,13 @@ public class HousingController {
     @Autowired
     private HouseService houseService;
 
-//    @Autowired
-//    private EmployeeService employeeService;
-//
-//    @Autowired
-//    private HouseAssignProducer houseAssignProducer;
-
     // Role Check
     private boolean hasRole(Authentication auth, String role) {
         return auth.getAuthorities().stream()
                 .anyMatch(a -> role.equals(a.getAuthority()));
     }
 
-//    @GetMapping
+//    @GetMapping("/assign")
 //    public ResponseEntity<?> getAssignedHouse(Authentication authentication) {
 //        // role validation
 //        boolean isHr = hasRole(authentication, "ROLE_HR");
