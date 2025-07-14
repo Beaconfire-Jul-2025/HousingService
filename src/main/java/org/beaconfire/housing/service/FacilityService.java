@@ -3,10 +3,12 @@ package org.beaconfire.housing.service;
 import org.beaconfire.housing.entity.Facility;
 import org.beaconfire.housing.repo.FacilityRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Optional;
 
 @Service
 public class FacilityService {
@@ -14,8 +16,19 @@ public class FacilityService {
     @Autowired
     private FacilityRepository facilityRepository;
 
-    public List<Facility> getAllFacilities() {
-        return facilityRepository.findAll();
+    public Page<Facility> getAllFacilities(int page, int size, String sortBy, String sortDir, String type, Integer houseId) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortDir), sortBy));
+        Specification<Facility> spec = Specification.where(null);
+
+        if (type != null && !type.isEmpty()) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("type"), type));
+        }
+
+        if (houseId != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("house").get("id"), houseId));
+        }
+
+        return facilityRepository.findAll(spec, pageable);
     }
 
     public Facility getFacilityById(int id) {

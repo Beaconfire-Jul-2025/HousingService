@@ -62,7 +62,7 @@ public class FacilityReportController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    // create comment for report
+    // create comment for reports
     @PostMapping("/facility-report/{reportId}/comment")
     public ResponseEntity<CreateCommentResponse> createComment(
             @PathVariable Integer reportId,
