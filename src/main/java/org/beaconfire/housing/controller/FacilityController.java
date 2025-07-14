@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 @RestController
-@RequestMapping("/housing")
+@RequestMapping("/facilities")
 public class FacilityController {
     @Autowired
     private FacilityService facilityService;
@@ -22,12 +22,12 @@ public class FacilityController {
     private HouseService houseService;
 
 
-    @GetMapping("/facilities/all")
+    @GetMapping("/all")
     public ResponseEntity<List<Facility>> getAllFacilities() {
         return ResponseEntity.ok(facilityService.getAllFacilities());
     }
 
-    @GetMapping("/facilities/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<Facility> getFacilityById(@PathVariable int id) {
         Facility facility = facilityService.getFacilityById(id);
         if (facility != null) {
@@ -37,7 +37,7 @@ public class FacilityController {
         }
     }
 
-    @PostMapping("/facilities")
+    @PostMapping
     public ResponseEntity<?> createFacility(@RequestBody FacilityRequest facilityRequest) {
         try {
             House house = houseService.getHouseById(facilityRequest.getHouseId());
@@ -57,7 +57,7 @@ public class FacilityController {
         }
     }
 
-    @PutMapping("/facilities/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<?> updateFacility(@PathVariable int id, @RequestBody FacilityRequest req) {
         try {
 
@@ -78,7 +78,7 @@ public class FacilityController {
         }
     }
 
-    @DeleteMapping("/facilities/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteFacility(@PathVariable int id) {
         try {
             facilityService.deleteFacility(id);
