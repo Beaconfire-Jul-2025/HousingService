@@ -1,6 +1,7 @@
 package org.beaconfire.housing.service;
 
 import org.beaconfire.housing.dto.CommentDTO;
+import org.beaconfire.housing.dto.request.CreateCommentRequest;
 import org.beaconfire.housing.dto.request.CreateReportRequest;
 import org.beaconfire.housing.dto.response.ReportDetailResponse;
 import org.beaconfire.housing.dto.response.ReportListResponse;
@@ -20,6 +21,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.test.context.support.WithMockUser;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -269,4 +271,64 @@ class FacilityReportServiceTest {
 
         verify(facilityReportDetailRepository, never()).findByIdOrderByCreateDateDesc(any());
     }
+
+    @Test
+    void addComment_Success() {
+        // Arrange
+        Integer reportId = 1;
+        String employeeId = "emp_456";
+        String description = "This issue needs urgent attention";
+
+        when(facilityReportRepository.findById(reportId))
+                .thenReturn(Optional.of(testReport));
+
+        when(facilityReportDetailRepository.save(any(FacilityReportDetail.class)))
+                .thenAnswer(invocation -> {
+                    FacilityReportDetail savedComment = invocation.getArgument(0);
+                    savedComment.setId(3); // Set ID as if database generated it
+                    // Simulate database/JPA setting the createDate
+                    savedComment.setCreateDate(Timestamp.valueOf(LocalDateTime.now()));
+                    return savedComment;
+                });
+
+        // Act
+        Integer commentId = facilityReportService.addComment(reportId, employeeId, description);
+
+        // Assert
+        assertNotNull(commentId);
+        assertEquals(3, commentId);
+
+        verify(facilityReportRepository, times(1)).findById(reportId);
+
+        // Verify the comment is saved with correct fields
+        verify(facilityReportDetailRepository, times(1)).save(argThat(comment -> {
+            // Verify all fields are set correctly when passed to save
+            assertEquals(reportId, comment.getFacilityReport().getId());
+            assertEquals(employeeId, comment.getEmployeeId());
+            assertEquals(description, comment.getComment());
+            // For a new comment, lastModificationDate should be null
+            assertNull(comment.getLastModificationDate());
+            // Note: createDate might be null here if set by @PrePersist or database
+            return true;
+        }));
+    }
+
+    @Test
+    void addComment_ReportNotFound() {
+        // Arrange
+        Integer reportId = 999;
+        String employeeId = "emp_456";
+        String description = "Comment on non-existent report";
+
+        when(facilityReportRepository.findById(reportId))
+                .thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(ReportNotFoundException.class, () ->
+                facilityReportService.addComment(reportId, employeeId, description)
+        );
+
+        verify(facilityReportDetailRepository, never()).save(any());
+    }
+
 }
