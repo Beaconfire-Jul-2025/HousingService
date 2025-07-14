@@ -1,5 +1,6 @@
 package org.beaconfire.housing.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -59,6 +60,7 @@ public class Facility {
 
     // Relationship with FacilityReport
     @OneToMany(mappedBy = "facility", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
     private List<FacilityReport> facilityReports = new ArrayList<>();
 
     @PrePersist
