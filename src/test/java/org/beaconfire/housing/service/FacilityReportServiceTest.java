@@ -334,4 +334,39 @@ class FacilityReportServiceTest {
         verify(facilityReportDetailRepository, never()).save(any());
     }
 
+    @Test
+    void updateComment_Success() {
+        // Arrange
+        Integer reportId = 1;
+        Integer commentId = 10;
+        String newDescription = "Updated comment content";
+        String employeeId = "emp_123";
+
+        FacilityReportDetail existingComment = FacilityReportDetail.builder()
+                .id(commentId)
+                .facilityReport(testReport)  // testReport has id = 1
+                .employeeId(employeeId)
+                .comment("Original comment")
+                .build();
+
+        // Fix: Mock findById instead of existsById
+        when(facilityReportRepository.findById(reportId))
+                .thenReturn(Optional.of(testReport));  // Return the test report
+        when(facilityReportDetailRepository.findById(commentId))
+                .thenReturn(Optional.of(existingComment));
+        when(facilityReportDetailRepository.save(any(FacilityReportDetail.class)))
+                .thenReturn(existingComment);
+
+        // Act
+        facilityReportService.updateComment(reportId, commentId, newDescription, employeeId);
+
+        // Assert
+        verify(facilityReportRepository).findById(reportId);  // Changed from existsById
+        verify(facilityReportDetailRepository).findById(commentId);
+        verify(facilityReportDetailRepository).save(argThat(comment ->
+                comment.getComment().equals(newDescription) &&
+                        comment.getId().equals(commentId)
+        ));
+    }
+
 }

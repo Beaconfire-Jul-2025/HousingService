@@ -67,8 +67,8 @@ public class FacilityReportController {
     public ResponseEntity<CreateCommentResponse> createComment(
             @PathVariable Integer reportId,
             @Valid @RequestBody CreateCommentRequest request,
-            Authentication authentication
-    ){
+            Authentication authentication)
+    {
         String employeeId = authentication.getPrincipal().toString();
         Integer commentId = facilityReportService.addComment(reportId, employeeId, request.getDescription());
 
@@ -77,5 +77,25 @@ public class FacilityReportController {
                 "Comment added successfully"
         );
         return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    // update comment for report
+    @PutMapping("/facility-report/{reportId}/comment/{commentId}")
+    public ResponseEntity<CreateCommentResponse> updateComment(
+            @PathVariable Integer reportId,
+            @PathVariable Integer commentId,
+            @Valid @RequestBody CreateCommentRequest request, // Use it to update comment, fields are the same
+            Authentication authentication) {
+
+        String employeeId = authentication.getPrincipal().toString();
+
+        facilityReportService.updateComment(reportId, commentId, request.getDescription(), employeeId);
+
+        CreateCommentResponse response = new CreateCommentResponse(
+                commentId,  // Just use the path variable
+                "Comment updated successfully"
+        );
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

@@ -8,6 +8,8 @@ import org.beaconfire.housing.dto.response.ReportResponse;
 import org.beaconfire.housing.entity.Facility;
 import org.beaconfire.housing.entity.FacilityReport;
 import org.beaconfire.housing.entity.FacilityReportDetail;
+import org.beaconfire.housing.exception.BadRequestException;
+import org.beaconfire.housing.exception.CommentNotFoundException;
 import org.beaconfire.housing.exception.FacilityNotFoundException;
 import org.beaconfire.housing.exception.ReportNotFoundException;
 import org.beaconfire.housing.repo.FacilityReportDetailRepository;
@@ -114,7 +116,31 @@ public class FacilityReportService {
         return savedComment.getId();
     }
 
+    // Update comment
+    public void updateComment(Integer reportId, Integer commentId, String description, String employeeId) {
+        // verify if the report exists
+        FacilityReport report = facilityReportRepository.findById(reportId)
+                .orElseThrow(() -> new ReportNotFoundException("Report not found"));
 
+        // Get the comment by id
+        FacilityReportDetail comment = facilityReportDetailRepository.findById(commentId)
+                .orElseThrow(() -> new CommentNotFoundException("Comment not found"));
+
+        // Verify comment belongs to this report
+        if(!comment.getFacilityReport().getId().equals(reportId)) {
+            throw new BadRequestException("Comment does not belong to this report");
+        }
+
+        // Verify user owns the comment
+        if(!comment.getEmployeeId().equals(employeeId)) {
+            throw new BadRequestException("Comment does not belong to this user");
+        }
+
+        // Update comment
+        comment.setComment(description);
+
+        facilityReportDetailRepository.save(comment);
+    }
     // Helper function: Convert entity to DTO
     private ReportResponse convertToReportDTO(FacilityReport report) {
         return ReportResponse.builder()
