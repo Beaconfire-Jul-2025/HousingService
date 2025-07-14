@@ -22,7 +22,7 @@ import java.util.HashMap;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/housing")
+@RequestMapping("/house")
 public class HousingController {
 
     @Autowired
