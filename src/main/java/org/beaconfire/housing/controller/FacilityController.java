@@ -6,11 +6,11 @@ import org.beaconfire.housing.entity.House;
 import org.beaconfire.housing.service.FacilityService;
 import org.beaconfire.housing.service.HouseService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.NoSuchElementException;
 
 @RestController
@@ -22,9 +22,17 @@ public class FacilityController {
     private HouseService houseService;
 
 
-    @GetMapping("/all")
-    public ResponseEntity<List<Facility>> getAllFacilities() {
-        return ResponseEntity.ok(facilityService.getAllFacilities());
+    @GetMapping
+    public ResponseEntity<org.springframework.data.domain.Page<Facility>> getFacilities(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) Integer houseId
+    ) {
+        Page<Facility> facilities = facilityService.getAllFacilities(page, size, sortBy, sortDir, type, houseId);
+        return ResponseEntity.ok(facilities);
     }
 
     @GetMapping("/{id}")

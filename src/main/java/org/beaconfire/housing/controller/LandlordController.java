@@ -6,10 +6,11 @@ import org.beaconfire.housing.exception.UserNotFoundException;
 import org.beaconfire.housing.service.LandlordService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-        import java.util.List;
+import java.util.List;
 
 @RestController
 @RequestMapping("/landlord")
@@ -18,9 +19,15 @@ public class LandlordController {
     @Autowired
     private LandlordService landlordService;
 
-    @GetMapping("/all")
-    public ResponseEntity<List<Landlord>> getAll() {
-        return ResponseEntity.ok(landlordService.getAllLandlords());
+    @GetMapping
+    public ResponseEntity<Page<Landlord>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(required = false) String email
+    ) {
+        return ResponseEntity.ok(landlordService.getAllLandlords(page, size, sortBy, sortDir, email));
     }
 
     @GetMapping("/{id}")

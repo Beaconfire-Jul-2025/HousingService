@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
+import org.springframework.data.domain.Page;
+
 @RestController
 @RequestMapping("/house")
 public class HousingController {
@@ -133,16 +135,23 @@ public class HousingController {
 //
 //    }
 
-    @GetMapping("/all")
-    public ResponseEntity<?> getAllHouses(Authentication authentication) {
+    @GetMapping
+    public ResponseEntity<?> getAllHouses(
+            Authentication authentication,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(required = false) String address
+    ) {
         if (!hasRole(authentication, "ROLE_HR")) {
             Map<String, String> response = new HashMap<>();
             response.put("message", "Only HR can view all houses.");
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
         }
 
-        List<House> houses = houseService.getAllHouses();
-        return ResponseEntity.ok(houses);
+        Page<House> housePage = houseService.getHouses(page, size, sortBy, sortDir, address);
+        return ResponseEntity.ok(housePage);
     }
 
     @GetMapping("/{id}")
