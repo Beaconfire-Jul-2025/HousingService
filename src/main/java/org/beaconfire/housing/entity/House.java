@@ -27,6 +27,9 @@ public class House {
     @Column(name = "Description", columnDefinition = "TEXT")
     private String description;
 
+    @Column(name = "currentOccupant", nullable = false)
+    private Integer currentOccupant = 0;
+
     @Column(name = "CreateDate", updatable = false)
     private Timestamp createDate;
 
