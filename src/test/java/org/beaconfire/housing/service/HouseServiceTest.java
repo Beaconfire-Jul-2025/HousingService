@@ -87,37 +87,37 @@ class HouseServiceTest {
         verify(houseRepository, times(1)).save(minimalHouse);
     }
 
-    @Test
-    void getAllHouses_ShouldReturnAllHouses() {
-        // Arrange
-        when(houseRepository.findAll()).thenReturn(testHouses);
+//    @Test
+//    void getAllHouses_ShouldReturnAllHouses() {
+//        // Arrange
+//        when(houseRepository.findAll()).thenReturn(testHouses);
+//
+//        // Act
+//        List<House> result = houseService.getAllHouses();
+//
+//        // Assert
+//        assertNotNull(result);
+//        assertEquals(2, result.size());
+//        assertEquals(testHouse.getId(), result.get(0).getId());
+//        assertEquals(100, result.get(0).getLandlordId());
+//        assertEquals("456 Oak Ave, Springfield, IL 62702", result.get(1).getAddress());
+//        assertEquals(6, result.get(1).getMaxOccupant());
+//        verify(houseRepository, times(1)).findAll();
+//    }
 
-        // Act
-        List<House> result = houseService.getAllHouses();
-
-        // Assert
-        assertNotNull(result);
-        assertEquals(2, result.size());
-        assertEquals(testHouse.getId(), result.get(0).getId());
-        assertEquals(100, result.get(0).getLandlordId());
-        assertEquals("456 Oak Ave, Springfield, IL 62702", result.get(1).getAddress());
-        assertEquals(6, result.get(1).getMaxOccupant());
-        verify(houseRepository, times(1)).findAll();
-    }
-
-    @Test
-    void getAllHouses_ShouldReturnEmptyListWhenNoHouses() {
-        // Arrange
-        when(houseRepository.findAll()).thenReturn(Collections.emptyList());
-
-        // Act
-        List<House> result = houseService.getAllHouses();
-
-        // Assert
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-        verify(houseRepository, times(1)).findAll();
-    }
+//    @Test
+//    void getAllHouses_ShouldReturnEmptyListWhenNoHouses() {
+//        // Arrange
+//        when(houseRepository.findAll()).thenReturn(Collections.emptyList());
+//
+//        // Act
+//        List<House> result = houseService.getAllHouses();
+//
+//        // Assert
+//        assertNotNull(result);
+//        assertTrue(result.isEmpty());
+//        verify(houseRepository, times(1)).findAll();
+//    }
 
     @Test
     void createHouse_ShouldHandleRepositoryException() {

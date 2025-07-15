@@ -18,20 +18,11 @@ public class FacilityService {
     @Autowired
     private FacilityRepository facilityRepository;
 
-    public Page<Facility> getAllFacilities(int page, int size, String sortBy, String sortDir, String type, Integer houseId) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortDir), sortBy));
-        Specification<Facility> spec = Specification.where(null);
-
-        if (type != null && !type.isEmpty()) {
-            spec = spec.and((root, query, cb) -> cb.equal(root.get("type"), type));
-        }
-
-        if (houseId != null) {
-            spec = spec.and((root, query, cb) -> cb.equal(root.get("house").get("id"), houseId));
-        }
-
-        return facilityRepository.findAll(spec, pageable);
+    public Page<Facility> getFacilities(Integer houseId, String type, Integer quantity,
+                                        Pageable pageable) {
+        return facilityRepository.findByFilters(houseId, type, quantity, pageable);
     }
+
 
     public Facility getFacilityById(int id) {
         return facilityRepository.findById(id)

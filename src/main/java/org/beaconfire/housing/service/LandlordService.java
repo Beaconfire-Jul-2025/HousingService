@@ -17,13 +17,8 @@ public class LandlordService {
     @Autowired
     private LandlordRepository landlordRepository;
 
-    public Page<Landlord> getAllLandlords(int page, int size, String sortBy, String sortDir, String email) {
-        Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
-        Pageable pageable = PageRequest.of(page, size, sort);
-        if (email != null && !email.isEmpty()) {
-            return landlordRepository.findByEmailContainingIgnoreCase(email, pageable);
-        }
-        return landlordRepository.findAll(pageable);
+    public Page<Landlord> getAllLandlords(String firstName, String lastName, String email, String cellPhone, Pageable pageable) {
+        return landlordRepository.findByFilters(firstName, lastName, email, cellPhone, pageable);
     }
 
     public Landlord getLandlordById(Integer id) {
