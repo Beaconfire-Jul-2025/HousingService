@@ -2,7 +2,6 @@ package org.beaconfire.housing.service;
 
 import org.beaconfire.housing.dto.CommentDTO;
 import org.beaconfire.housing.dto.request.CreateReportRequest;
-import org.beaconfire.housing.dto.request.UpdateReportStatusRequest;
 import org.beaconfire.housing.dto.response.ReportDetailResponse;
 import org.beaconfire.housing.dto.response.ReportListResponse;
 import org.beaconfire.housing.dto.response.ReportResponse;
@@ -25,7 +24,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.test.context.support.WithMockUser;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;

@@ -67,6 +67,7 @@ public class FacilityReportService {
     }
 
     // Get report summary by report id
+    @Transactional
     public ReportResponse getFacilityReportById(Integer id) {
         FacilityReport report = facilityReportRepository.findById(id)
                 .orElseThrow(() -> new ReportNotFoundException("Report not found"));
@@ -75,6 +76,7 @@ public class FacilityReportService {
     }
 
 //    // Get report list by house id
+    @Transactional
     public ReportListResponse getFacilityReportsByHouseId(Integer houseId) {
         // Fetch list of reports
         List<FacilityReport> reports = facilityReportRepository.findByHouseId(houseId);
@@ -86,6 +88,7 @@ public class FacilityReportService {
     }
 
     // Pagination
+    @Transactional
     public Page<FacilityReport> getFacilityReportsByHouseId(
             Integer houseId, int page, int size, String sortBy, String sortDir,
             String status, String title) {
@@ -119,6 +122,7 @@ public class FacilityReportService {
     }
 
     // Get details for one report
+    @Transactional
     public ReportDetailResponse getFacilityReportDetails(Integer id) {
         FacilityReport report = facilityReportRepository.findById(id)
                 .orElseThrow(() -> new ReportNotFoundException("Report not found"));
@@ -138,6 +142,7 @@ public class FacilityReportService {
     }
 
     // Add comment
+    @Transactional
     public Integer addComment(Integer reportId, String employeeId, String description) {
         // verify if the report exists
         FacilityReport report = facilityReportRepository.findById(reportId)
