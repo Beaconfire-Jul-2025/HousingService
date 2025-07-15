@@ -26,8 +26,8 @@ public class HouseService {
     }
 
     @Transactional
-    public void createHouse(House house) {
-        houseRepository.save(house);
+    public House createHouse(House house) {
+        return houseRepository.save(house);
     }
 
     @Transactional
@@ -36,8 +36,8 @@ public class HouseService {
     }
 
     @Transactional
-    public void updateHouse(House house) {
-        houseRepository.save(house);
+    public House updateHouse(House house) {
+        return houseRepository.save(house);
     }
 
     @Transactional

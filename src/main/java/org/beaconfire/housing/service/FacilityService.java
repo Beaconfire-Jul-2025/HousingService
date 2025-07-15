@@ -10,6 +10,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.util.NoSuchElementException;
+
 @Service
 public class FacilityService {
 
@@ -32,7 +34,8 @@ public class FacilityService {
     }
 
     public Facility getFacilityById(int id) {
-        return facilityRepository.findById(id).orElse(null);
+        return facilityRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Facility with ID " + id + " not found."));
     }
 
     public Facility createFacility(Facility facility) {

@@ -2,15 +2,11 @@ package org.beaconfire.housing.controller;
 
 
 import org.beaconfire.housing.entity.Landlord;
-import org.beaconfire.housing.exception.UserNotFoundException;
 import org.beaconfire.housing.service.LandlordService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/landlord")
@@ -20,55 +16,38 @@ public class LandlordController {
     private LandlordService landlordService;
 
     @GetMapping
-    public ResponseEntity<Page<Landlord>> getAll(
+    public Page<Landlord> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir,
             @RequestParam(required = false) String email
     ) {
-        return ResponseEntity.ok(landlordService.getAllLandlords(page, size, sortBy, sortDir, email));
+        return landlordService.getAllLandlords(page, size, sortBy, sortDir, email);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getById(@PathVariable Integer id) {
-        return landlordService.getLandlordById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public Landlord getById(@PathVariable Integer id) {
+        return landlordService.getLandlordById(id);
     }
 
     @PostMapping
-    public ResponseEntity<Landlord> create(@RequestBody Landlord landlord) {
+    public Landlord create(@RequestBody Landlord landlord) {
         try{
-            return ResponseEntity.ok(landlordService.createLandlord(landlord));
+            return landlordService.createLandlord(landlord);
         }
         catch (DataIntegrityViolationException e){
-            return ResponseEntity.badRequest().build();
+            throw new IllegalArgumentException(e.getMessage());
         }
-
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Landlord> update(@PathVariable Integer id, @RequestBody Landlord landlord) {
-        try {
-            return ResponseEntity.ok(landlordService.updateLandlord(id, landlord));
-        }
-        catch (DataIntegrityViolationException e){
-            return ResponseEntity.badRequest().build();
-        }
-        catch (UserNotFoundException e){
-            return ResponseEntity.notFound().build();
-        }
+    public Landlord update(@PathVariable Integer id, @RequestBody Landlord landlord) {
+        return landlordService.updateLandlord(id, landlord);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable Integer id) {
-        try{
-            landlordService.deleteLandlord(id);
-        }
-        catch (Exception e){
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok().build();
+    public void delete(@PathVariable Integer id) {
+        landlordService.deleteLandlord(id);
     }
 }
