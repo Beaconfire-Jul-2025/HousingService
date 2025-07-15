@@ -3,6 +3,7 @@ package org.beaconfire.housing.exception;
 import org.beaconfire.housing.dto.ApiResponse;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -72,29 +73,27 @@ public class GlobalExceptionHandler {
 
     // TODO: Add specific exception handlers for your application, wrap them in ApiResponse
     @ExceptionHandler(ReportNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleReportNotFound(ReportNotFoundException ex) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("message", ex.getMessage());
-        body.put("timestamp", LocalDateTime.now());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    public ApiResponse<?> handleReportNotFound(ReportNotFoundException ex) {
+        return fail("404000", ex.getMessage(), 2);
     }
 
     @ExceptionHandler(FacilityNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleFacilityReport(FacilityNotFoundException ex) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("message", ex.getMessage());
-        body.put("timestamp", LocalDateTime.now());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    public ApiResponse<?> handleFacilityReport(FacilityNotFoundException ex) {
+        return fail("400000", ex.getMessage(), 2);
     }
 
     @ExceptionHandler(RoleCheckException.class)
-    public ResponseEntity<Map<String, Object>> handleRoleCheck(RoleCheckException ex) {
+    public ApiResponse<?> handleRoleCheck(RoleCheckException ex) {
         // User Role does not meet requirement
-        Map<String, Object> body = new HashMap<>();
-        body.put("message", ex.getMessage());
-        body.put("timestamp", LocalDateTime.now());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+        return fail("401000", ex.getMessage(), 2);
     }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ApiResponse<?> handleDataIntegrity(DataIntegrityViolationException ex) {
+        return fail("400000", ex.getMessage(), 2);
+    }
+
+
 
 
 }

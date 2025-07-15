@@ -1,5 +1,6 @@
 package org.beaconfire.housing.exception;
 
+import org.beaconfire.housing.dto.ApiResponse;
 import org.beaconfire.housing.service.FacilityReportService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,10 +30,10 @@ class GlobalExceptionHandlerTest {
         ReportNotFoundException exception = new ReportNotFoundException(errorMessage);
 
         // When
-        ResponseEntity<Map<String, Object>> response = globalExceptionHandler.handleReportNotFound(exception);
+        ApiResponse response = globalExceptionHandler.handleReportNotFound(exception);
 
         // Then
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertEquals(errorMessage, response.getBody().get("message"));
+        assertEquals(404000, response.getErrorCode());
+        assertEquals(errorMessage, response.getErrorMessage());
     }
 }
