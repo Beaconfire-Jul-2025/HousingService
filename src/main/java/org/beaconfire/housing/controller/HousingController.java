@@ -11,9 +11,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.List;
+import java.util.Collections;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.NoSuchElementException;
 
 import org.springframework.data.domain.Page;
 
@@ -183,6 +184,7 @@ public class HousingController {
         house.setLandlordId(dto.getLandlordId());
         house.setAddress(dto.getAddress());
         house.setMaxOccupant(dto.getMaxOccupant());
+        house.setCurrentOccupant(0);
         house.setDescription(dto.getDescription());
 
         try {
@@ -198,7 +200,7 @@ public class HousingController {
             // optional: if dont want duplicates, make the addr unique in db
         }
     }
-  
+
     @PutMapping("/{id}")
     public ResponseEntity<?> updateHouse(@PathVariable int id, @RequestBody HouseDTO updatedHouse, Authentication authentication) {
         if (!hasRole(authentication, "ROLE_HR")) {
@@ -244,5 +246,52 @@ public class HousingController {
             return ResponseEntity.badRequest().body(response);
         }
     }
+
+    @GetMapping("/{houseId}/current-occupant")
+    public ResponseEntity<?> getCurrentOccupant(@PathVariable Integer houseId) {
+        try{
+            Integer current = houseService.getCurrentOccupant(houseId);
+            return ResponseEntity.ok(Collections.singletonMap("currentOccupant", current));
+        }
+        catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Collections.singletonMap("error", "House with ID " + houseId + " does not exist."));
+        }
+    }
+
+
+    @PostMapping("/{houseId}/current-occupant/increase")
+    public ResponseEntity<?> increaseOccupant(@PathVariable Integer houseId) {
+        try {
+            Integer updated = houseService.incrementOccupant(houseId);
+            return ResponseEntity.ok(Collections.singletonMap("currentOccupant", updated));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Collections.singletonMap("error", "House with ID " + houseId + " does not exist."));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/{houseId}/current-occupant/decrease")
+    public ResponseEntity<?> decreaseOccupant(@PathVariable Integer houseId) {
+        try {
+            Integer updated = houseService.decrementOccupant(houseId);
+            return ResponseEntity.ok(Collections.singletonMap("currentOccupant", updated));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Collections.singletonMap("error", "House with ID " + houseId + " does not exist."));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.singletonMap("error", e.getMessage()));
+        }
+    }
+
+
+
+
 
 }

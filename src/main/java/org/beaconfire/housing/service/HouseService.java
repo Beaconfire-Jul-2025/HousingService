@@ -57,4 +57,36 @@ public class HouseService {
         }
         return houseRepository.findAll(pageable);
     }
+
+    public Integer getCurrentOccupant(Integer houseId) {
+        House house = houseRepository.findById(houseId)
+                .orElseThrow(() -> new NoSuchElementException("House not found"));
+        return house.getCurrentOccupant();
+    }
+
+    public Integer incrementOccupant(Integer houseId) {
+        House house = houseRepository.findById(houseId)
+                .orElseThrow(() -> new NoSuchElementException("House not found"));
+
+        if (house.getCurrentOccupant() >= house.getMaxOccupant()) {
+            throw new IllegalStateException("Cannot exceed max occupant limit");
+        }
+
+        house.setCurrentOccupant(house.getCurrentOccupant() + 1);
+        houseRepository.save(house);
+        return house.getCurrentOccupant();
+    }
+
+    public Integer decrementOccupant(Integer houseId) {
+        House house = houseRepository.findById(houseId)
+                .orElseThrow(() -> new NoSuchElementException("House not found"));
+
+        if (house.getCurrentOccupant() <= 0) {
+            throw new IllegalStateException("Occupant count cannot be negative");
+        }
+
+        house.setCurrentOccupant(house.getCurrentOccupant() - 1);
+        houseRepository.save(house);
+        return house.getCurrentOccupant();
+    }
 }
