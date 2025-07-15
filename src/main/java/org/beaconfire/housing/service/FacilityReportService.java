@@ -9,6 +9,7 @@ import org.beaconfire.housing.dto.response.UpdateReportStatusResponse;
 import org.beaconfire.housing.entity.Facility;
 import org.beaconfire.housing.entity.FacilityReport;
 import org.beaconfire.housing.entity.FacilityReportDetail;
+import org.beaconfire.housing.exception.CommentNotFoundException;
 import org.beaconfire.housing.exception.FacilityNotFoundException;
 import org.beaconfire.housing.exception.ReportNotFoundException;
 import org.beaconfire.housing.repo.FacilityReportDetailRepository;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -156,6 +158,23 @@ public class FacilityReportService {
         // save and return id
         FacilityReportDetail savedComment = facilityReportDetailRepository.save(comment);
         return savedComment.getId();
+    }
+
+    // Update comment
+    @Transactional
+    public void updateComment(Integer reportId, Integer commentId, String description) {
+        // verify if the report exists
+        FacilityReport report = facilityReportRepository.findById(reportId)
+                .orElseThrow(() -> new ReportNotFoundException("Report not found"));
+        // Find the existing comment
+        FacilityReportDetail comment = facilityReportDetailRepository.findById(commentId)
+                .orElseThrow(() -> new CommentNotFoundException("Comment not found"));
+
+        // update comments
+        comment.setComment(description);
+        comment.setLastModificationDate(Timestamp.valueOf(LocalDateTime.now()));
+
+        facilityReportDetailRepository.save(comment);
     }
 
     // Update status
