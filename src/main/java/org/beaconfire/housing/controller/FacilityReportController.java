@@ -3,7 +3,9 @@ package org.beaconfire.housing.controller;
 import org.beaconfire.housing.dto.request.CreateCommentRequest;
 import org.beaconfire.housing.dto.request.CreateReportRequest;
 import org.beaconfire.housing.dto.response.*;
+import org.beaconfire.housing.entity.FacilityReport;
 import org.beaconfire.housing.service.FacilityReportService;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -36,9 +38,17 @@ public class FacilityReportController {
 
     // get a list of reports for specific house
     @GetMapping("/facility-report")
-    public ResponseEntity<ReportListResponse> getFacilityReportByHouseId(@RequestParam("houseId") Integer houseId) {
-        ReportListResponse response = facilityReportService.getFacilityReportByHouseId(houseId);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+    public ResponseEntity<?> getFacilityReportsByHouseId(
+            @RequestParam("houseId") Integer houseId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createDate") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String title
+    ) {
+        Page<FacilityReport> reportPage = facilityReportService.getFacilityReportsByHouseId(houseId, page, size, sortBy, sortDir, status, title);
+        return new ResponseEntity<>(reportPage, HttpStatus.OK);
     }
 
     // create facility report for a house

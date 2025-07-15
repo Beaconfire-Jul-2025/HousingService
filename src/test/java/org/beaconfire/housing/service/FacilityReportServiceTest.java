@@ -21,6 +21,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -50,6 +52,7 @@ class FacilityReportServiceTest {
 
     private Facility testFacility;
     private FacilityReport testReport;
+    private FacilityReport testReport2;
     private FacilityReportDetail testComment1;
     private FacilityReportDetail testComment2;
 
@@ -73,6 +76,17 @@ class FacilityReportServiceTest {
                 .description("Kitchen faucet is leaking")
                 .status("Open")
                 .createDate(Timestamp.valueOf(LocalDateTime.now()))
+                .build();
+
+        // Setup second test report
+        testReport2 = FacilityReport.builder()
+                .id(2)
+                .facility(testFacility)
+                .employeeId("emp_456")
+                .title("Broken Window")
+                .description("Living room window is broken")
+                .status("In Progress")
+                .createDate(Timestamp.valueOf(LocalDateTime.now().minusDays(1)))
                 .build();
 
         // Setup test comments
@@ -178,30 +192,58 @@ class FacilityReportServiceTest {
     void getFacilityReportByHouseId_Success() {
         // Arrange
         List<FacilityReport> reports = Arrays.asList(testReport);
-        when(facilityReportRepository.findByHouseIdOrderByCreateDateDesc(1))
+        when(facilityReportRepository.findByHouseId(1))
                 .thenReturn(reports);
 
         // Act
-        ReportListResponse response = facilityReportService.getFacilityReportByHouseId(1);
+        ReportListResponse response = facilityReportService.getFacilityReportsByHouseId(1);
 
         // Assert
         assertTrue(response.isSuccess());
         assertEquals(1, response.getData().size());
         assertEquals("Leaking Faucet", response.getData().get(0).getTitle());
+        verify(facilityReportRepository).findByHouseId(1);
     }
 
     @Test
     void getFacilityReportByHouseId_EmptyList() {
         // Arrange
-        when(facilityReportRepository.findByHouseIdOrderByCreateDateDesc(1))
+        when(facilityReportRepository.findByHouseId(1))
                 .thenReturn(Collections.emptyList());
 
         // Act
-        ReportListResponse response = facilityReportService.getFacilityReportByHouseId(1);
+        ReportListResponse response = facilityReportService.getFacilityReportsByHouseId(1);
 
         // Assert
         assertTrue(response.isSuccess());
         assertTrue(response.getData().isEmpty());
+        verify(facilityReportRepository).findByHouseId(1);
+    }
+
+    @Test
+    void getFacilityReports_WithPagination_Success() {
+        // Arrange
+        Page<FacilityReport> reportPage = new PageImpl<>(
+                Arrays.asList(testReport, testReport2),
+                PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createDate")),
+                2
+        );
+
+        when(facilityReportRepository.findAll(any(Specification.class), any(Pageable.class)))
+                .thenReturn(reportPage);
+
+        // Act
+        Page<FacilityReport> result = facilityReportService.getFacilityReportsByHouseId(
+                1, 0, 10, "createDate", "desc", null, null
+        );
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(2, result.getTotalElements());
+        assertEquals(2, result.getContent().size());
+        assertEquals("Leaking Faucet", result.getContent().get(0).getTitle());
+        assertEquals("Broken Window", result.getContent().get(1).getTitle());
+        verify(facilityReportRepository).findAll(any(Specification.class), any(Pageable.class));
     }
 
     @Test

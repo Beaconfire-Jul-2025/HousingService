@@ -13,6 +13,11 @@ import org.beaconfire.housing.exception.ReportNotFoundException;
 import org.beaconfire.housing.repo.FacilityReportDetailRepository;
 import org.beaconfire.housing.repo.FacilityReportRepository;
 import org.beaconfire.housing.repo.FacilityRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -68,15 +73,48 @@ public class FacilityReportService {
 
     }
 
-    // Get report list by house id
-    public ReportListResponse getFacilityReportByHouseId(Integer houseId) {
+//    // Get report list by house id
+    public ReportListResponse getFacilityReportsByHouseId(Integer houseId) {
         // Fetch list of reports
-        List<FacilityReport> reports = facilityReportRepository.findByHouseIdOrderByCreateDateDesc(houseId);
+        List<FacilityReport> reports = facilityReportRepository.findByHouseId(houseId);
         // Map to DTOs
         List<ReportResponse> reportResponses = reports.stream()
                 .map(this::convertToReportDTO)
                 .collect(Collectors.toList());
         return new ReportListResponse(true, reportResponses);
+    }
+
+    // Pagination
+    public Page<FacilityReport> getFacilityReportsByHouseId(
+            Integer houseId, int page, int size, String sortBy, String sortDir,
+            String status, String title) {
+
+        // Create Pageable
+        Sort.Direction direction = sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+
+        // Create Specification
+        Specification<FacilityReport> spec = Specification.where(null);
+
+        // Add house ID filter (required) - navigate through facility to house
+        spec = spec.and((root, query, cb) ->
+                cb.equal(root.get("facility").get("house").get("id"), houseId)
+        );
+
+        // Add status filter
+        if (status != null && !status.isEmpty()) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("status"), status));
+        }
+
+        // Add title filter (case-insensitive partial match)
+        if (title != null && !title.isEmpty()) {
+            spec = spec.and((root, query, cb) ->
+                    cb.like(cb.lower(root.get("title")), "%" + title.toLowerCase() + "%")
+            );
+        }
+
+        return facilityReportRepository.findAll(spec, pageable);
+
     }
 
     // Get details for one report
