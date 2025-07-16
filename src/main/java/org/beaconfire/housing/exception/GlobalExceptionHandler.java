@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.net.InetAddress;
@@ -93,7 +94,8 @@ public class GlobalExceptionHandler {
         return fail("400000", ex.getMessage(), 2);
     }
 
-
-
-
+    @ExceptionHandler(BadRequestException.class)
+    public ApiResponse<?> handleBadRequest(BadRequestException ex) {
+        return fail("400000", ex.getMessage(), 2);
+    }
 }

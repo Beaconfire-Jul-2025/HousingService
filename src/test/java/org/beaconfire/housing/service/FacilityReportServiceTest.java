@@ -2,9 +2,11 @@ package org.beaconfire.housing.service;
 
 import org.beaconfire.housing.dto.CommentDTO;
 import org.beaconfire.housing.dto.request.CreateReportRequest;
+import org.beaconfire.housing.dto.request.UpdateReportStatusRequest;
 import org.beaconfire.housing.dto.response.ReportDetailResponse;
 import org.beaconfire.housing.dto.response.ReportListResponse;
 import org.beaconfire.housing.dto.response.ReportResponse;
+import org.beaconfire.housing.dto.response.UpdateReportStatusResponse;
 import org.beaconfire.housing.entity.Facility;
 import org.beaconfire.housing.entity.FacilityReport;
 import org.beaconfire.housing.entity.FacilityReportDetail;
@@ -23,6 +25,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.test.context.support.WithMockUser;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -74,7 +77,7 @@ class FacilityReportServiceTest {
                 .employeeId("emp_123")
                 .title("Leaking Faucet")
                 .description("Kitchen faucet is leaking")
-                .status("Open")
+                .status("OPEN")
                 .createDate(Timestamp.valueOf(LocalDateTime.now()))
                 .build();
 
@@ -85,7 +88,7 @@ class FacilityReportServiceTest {
                 .employeeId("emp_456")
                 .title("Broken Window")
                 .description("Living room window is broken")
-                .status("In Progress")
+                .status("IN_PROGRESS")
                 .createDate(Timestamp.valueOf(LocalDateTime.now().minusDays(1)))
                 .build();
 
@@ -136,7 +139,7 @@ class FacilityReportServiceTest {
         assertEquals(1, response.getId());
         assertEquals("Leaking Faucet", response.getTitle());
         assertEquals("PLUMBING", response.getFacilityType());
-        assertEquals("Open", response.getStatus());
+        assertEquals("OPEN", response.getStatus());
 
         verify(facilityReportRepository, times(1)).save(any(FacilityReport.class));
     }
@@ -375,5 +378,31 @@ class FacilityReportServiceTest {
 
         verify(facilityReportDetailRepository, never()).save(any());
     }
+
+    @Test
+    void updateStatus_Success() {
+        // Arrange
+        when(facilityReportRepository.findById(1))
+                .thenReturn(Optional.of(testReport));
+        when(facilityReportRepository.save(any(FacilityReport.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Act
+        UpdateReportStatusResponse response = facilityReportService.updateStatus(1, "IN_PROGRESS");
+
+        // Assert
+        assertTrue(response.isSuccess());
+        assertEquals("Status updated successfully", response.getMessage());
+        assertEquals(1, response.getReportId());
+        assertEquals("OPEN", response.getPreviousStatus());
+        assertEquals("IN_PROGRESS", response.getNewStatus());
+        assertNotNull(response.getUpdatedAt());
+
+        // Verify the report was saved with new status
+        ArgumentCaptor<FacilityReport> captor = ArgumentCaptor.forClass(FacilityReport.class);
+        verify(facilityReportRepository).save(captor.capture());
+        assertEquals("IN_PROGRESS", captor.getValue().getStatus());
+    }
+
 
 }

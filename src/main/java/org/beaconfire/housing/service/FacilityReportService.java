@@ -5,6 +5,7 @@ import org.beaconfire.housing.dto.request.CreateReportRequest;
 import org.beaconfire.housing.dto.response.ReportDetailResponse;
 import org.beaconfire.housing.dto.response.ReportListResponse;
 import org.beaconfire.housing.dto.response.ReportResponse;
+import org.beaconfire.housing.dto.response.UpdateReportStatusResponse;
 import org.beaconfire.housing.entity.Facility;
 import org.beaconfire.housing.entity.FacilityReport;
 import org.beaconfire.housing.entity.FacilityReportDetail;
@@ -55,7 +56,7 @@ public class FacilityReportService {
                 .employeeId(employeeId)
                 .title(request.getTitle())
                 .description(request.getDescription())
-                .status("Open") // Default status when report is created
+                .status("OPEN") // Default status when report is created
                 .build();
 
         // Save report
@@ -152,6 +153,34 @@ public class FacilityReportService {
         return savedComment.getId();
     }
 
+    // Update status
+    @Transactional
+    public UpdateReportStatusResponse updateStatus(Integer reportId, String status) {
+        FacilityReport report = facilityReportRepository.findById(reportId)
+                .orElseThrow(() -> new ReportNotFoundException("Report not found"));
+        // get previous status
+        String previousStatus = report.getStatus();
+        if (previousStatus.equals(status)) {
+            return UpdateReportStatusResponse.builder()
+                    .success(false)
+                    .message("Status is already set to: " + status)
+                    .reportId(reportId)
+                    .previousStatus(previousStatus)
+                    .newStatus(status)
+                    .build();
+        }
+        // update status
+        report.setStatus(status);
+        FacilityReport updatedReport = facilityReportRepository.save(report);
+        return UpdateReportStatusResponse.builder()
+                .success(true)
+                .message("Status updated successfully")
+                .reportId(reportId)
+                .previousStatus(previousStatus)
+                .newStatus(status)
+                .updatedAt(new Timestamp(System.currentTimeMillis()))
+                .build();
+    }
 
     // Helper function: Convert entity to DTO
     private ReportResponse convertToReportDTO(FacilityReport report) {

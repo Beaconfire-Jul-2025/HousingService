@@ -1,6 +1,6 @@
 package org.beaconfire.housing.controller;
 
-import org.beaconfire.housing.dto.FacilityRequest;
+import org.beaconfire.housing.dto.request.FacilityRequest;
 import org.beaconfire.housing.dto.PageListResponse;
 import org.beaconfire.housing.entity.Facility;
 import org.beaconfire.housing.entity.House;
@@ -12,11 +12,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDateTime;
 import java.util.NoSuchElementException;
 
 @RestController
