@@ -4,16 +4,12 @@ import org.beaconfire.housing.dto.ApiResponse;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.net.InetAddress;
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
@@ -66,11 +62,6 @@ public class GlobalExceptionHandler {
         return fail("400002", ex.getMessage(), 2);
     }
 
-    @ExceptionHandler(Exception.class)
-    public ApiResponse<?> other(Exception ex) {
-        return fail("500000", "The system is busy, please try again later", 2);
-    }
-
     // TODO: Add specific exception handlers for your application, wrap them in ApiResponse
     @ExceptionHandler(ReportNotFoundException.class)
     public ApiResponse<?> handleReportNotFound(ReportNotFoundException ex) {
@@ -82,18 +73,21 @@ public class GlobalExceptionHandler {
         return fail("400000", ex.getMessage(), 2);
     }
 
-    @ExceptionHandler(RoleCheckException.class)
-    public ApiResponse<?> handleRoleCheck(RoleCheckException ex) {
-        // User Role does not meet requirement
-        return fail("401000", ex.getMessage(), 2);
-    }
-
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ApiResponse<?> handleDataIntegrity(DataIntegrityViolationException ex) {
         return fail("400000", ex.getMessage(), 2);
     }
 
 
+    @ExceptionHandler(AccessDeniedException.class)
+    public ApiResponse<?> handleRoleCheck(AccessDeniedException ex) {
+        // User Role does not meet requirement
+        return fail("401000", ex.getMessage(), 2);
+    }
 
+    @ExceptionHandler(Exception.class)
+    public ApiResponse<?> other(Exception ex) {
+        return fail("500000", "The system is busy, please try again later", 2);
+    }
 
 }
