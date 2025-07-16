@@ -27,6 +27,9 @@ public class LandlordService {
     }
 
     public Landlord createLandlord(Landlord landlord) {
+        if (landlord == null) {
+            throw new IllegalArgumentException("Landlord cannot be null");
+        }
         return landlordRepository.save(landlord);
     }
 

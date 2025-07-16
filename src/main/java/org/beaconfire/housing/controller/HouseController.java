@@ -20,7 +20,7 @@ import org.springframework.data.domain.Page;
 
 @RestController
 @RequestMapping("/house")
-public class HousingController {
+public class HouseController {
 
     @Autowired
     private HouseService houseService;

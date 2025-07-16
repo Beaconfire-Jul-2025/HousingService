@@ -64,12 +64,8 @@ public class LandlordController {
 
     @PostMapping
     public Landlord create(@RequestBody Landlord landlord) {
-        try{
-            return landlordService.createLandlord(landlord);
-        }
-        catch (DataIntegrityViolationException e){
-            throw new IllegalArgumentException(e.getMessage());
-        }
+        return landlordService.createLandlord(landlord);
+
     }
 
     @PutMapping("/{id}")
