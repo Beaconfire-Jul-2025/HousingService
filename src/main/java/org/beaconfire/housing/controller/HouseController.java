@@ -2,25 +2,25 @@ package org.beaconfire.housing.controller;
 
 
 import org.beaconfire.housing.dto.HouseDTO;
+import org.beaconfire.housing.dto.PageListResponse;
 import org.beaconfire.housing.entity.House;
+import org.beaconfire.housing.exception.RoleCheckException;
 import org.beaconfire.housing.service.HouseService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.Collections;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.NoSuchElementException;
 
 import org.springframework.data.domain.Page;
 
 @RestController
 @RequestMapping("/house")
-public class HousingController {
+public class HouseController {
 
     @Autowired
     private HouseService houseService;
@@ -137,47 +137,44 @@ public class HousingController {
 //    }
 
     @GetMapping
-    public ResponseEntity<?> getAllHouses(
+    public PageListResponse<House> getAllHouses(
             Authentication authentication,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir,
-            @RequestParam(required = false) String address
+            @RequestParam(required = false) String address,
+            @RequestParam(required = false) Integer maxOccupant,
+            @RequestParam(required = false) Integer currentOccupant,
+            @RequestParam(required = false) Integer landlordId
     ) {
         if (!hasRole(authentication, "ROLE_HR")) {
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Only HR can view all houses.");
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            throw new RoleCheckException("Only HR can view all houses.");
         }
 
-        Page<House> housePage = houseService.getHouses(page, size, sortBy, sortDir, address);
-        return ResponseEntity.ok(housePage);
+        Sort sort = sortDir.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<House> houses = houseService.getHouses(address, maxOccupant, currentOccupant, landlordId, pageable);
+
+        return PageListResponse.<House>builder()
+                .list(houses.getContent())
+                .current(houses.getNumber() + 1)
+                .pageSize(houses.getSize())
+                .total(houses.getTotalElements())
+                .build();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getHouseById(@PathVariable int id, Authentication authentication) {
-        if (!hasRole(authentication, "ROLE_HR")) {
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Only HR can view a house by ID.");
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
-        }
-        try {
-            House house = houseService.getHouseById(id);
-            return ResponseEntity.ok(house);
-        } catch (Exception e) {
-            Map<String, String> response = new HashMap<>();
-            response.put("message", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-        }
+    public House getHouseById(@PathVariable int id, Authentication authentication) {
+        return houseService.getHouseById(id);
     }
 
     @PostMapping
-    public ResponseEntity<?> createHouse(@Valid @RequestBody HouseDTO dto, Authentication authentication) {
+    public House createHouse(@Valid @RequestBody HouseDTO dto, Authentication authentication) {
         if (!hasRole(authentication, "ROLE_HR")) {
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Only HR can create houses.");
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            throw new RoleCheckException("Only HR can view all houses.");
         }
 
         House house = new House();
@@ -186,112 +183,63 @@ public class HousingController {
         house.setMaxOccupant(dto.getMaxOccupant());
         house.setCurrentOccupant(0);
         house.setDescription(dto.getDescription());
-
-        try {
-            houseService.createHouse(house);
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "House created successfully.");
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            // landlord does not exist
-            Map<String, String> response = new HashMap<>();
-            response.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-            // optional: if dont want duplicates, make the addr unique in db
+        try{
+            return houseService.createHouse(house);
         }
+        catch (DataIntegrityViolationException e){
+            throw new IllegalArgumentException(e.getMessage());
+        }
+
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateHouse(@PathVariable int id, @RequestBody HouseDTO updatedHouse, Authentication authentication) {
+    public House updateHouse(@PathVariable int id, @RequestBody HouseDTO updatedHouse, Authentication authentication) {
         if (!hasRole(authentication, "ROLE_HR")) {
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Only HR can update houses.");
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            throw new RoleCheckException("Only HR can view all houses.");
         }
+        if (!houseService.houseExists(id)){
+            throw new IllegalArgumentException("House does not exist.");
+        }
+        House house = new House();
+        house.setId(id);
+        house.setLandlordId(updatedHouse.getLandlordId());
+        house.setAddress(updatedHouse.getAddress());
+        house.setMaxOccupant(updatedHouse.getMaxOccupant());
+        house.setDescription(updatedHouse.getDescription());
+        return houseService.updateHouse(house);
 
-        try {
-            House house = new House();
-            house.setId(id);
-            house.setLandlordId(updatedHouse.getLandlordId());
-            house.setAddress(updatedHouse.getAddress());
-            house.setMaxOccupant(updatedHouse.getMaxOccupant());
-            house.setDescription(updatedHouse.getDescription());
-            houseService.updateHouse(house);
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "House updated successfully.");
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            Map<String, String> response = new HashMap<>();
-            response.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-        }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteHouse(@PathVariable int id, Authentication authentication) {
+    public void deleteHouse(@PathVariable int id, Authentication authentication) {
         if (!hasRole(authentication, "ROLE_HR")) {
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Only HR can delete houses.");
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            throw new RoleCheckException("Only HR can view all houses.");
         }
-
-        try {
-            houseService.deleteHouseById(id);
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "House deleted successfully.");
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            Map<String, String> response = new HashMap<>();
-            response.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-        }
+        houseService.deleteHouseById(id);
     }
 
     @GetMapping("/{houseId}/current-occupant")
-    public ResponseEntity<?> getCurrentOccupant(@PathVariable Integer houseId) {
-        try{
-            Integer current = houseService.getCurrentOccupant(houseId);
-            return ResponseEntity.ok(Collections.singletonMap("currentOccupant", current));
-        }
-        catch (NoSuchElementException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Collections.singletonMap("error", "House with ID " + houseId + " does not exist."));
-        }
+    public Integer getCurrentOccupant(@PathVariable Integer houseId) {
+            return houseService.getCurrentOccupant(houseId);
     }
 
 
     @PostMapping("/{houseId}/current-occupant/increase")
-    public ResponseEntity<?> increaseOccupant(@PathVariable Integer houseId) {
-        try {
-            Integer updated = houseService.incrementOccupant(houseId);
-            return ResponseEntity.ok(Collections.singletonMap("currentOccupant", updated));
-        } catch (IllegalStateException e) {
-            return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
-        } catch (NoSuchElementException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Collections.singletonMap("error", "House with ID " + houseId + " does not exist."));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+    public Integer increaseOccupant(@PathVariable Integer houseId, Authentication authentication) {
+        if (!hasRole(authentication, "ROLE_HR")) {
+            throw new RoleCheckException("Only HR can change # of Occupants.");
         }
+        return houseService.incrementOccupant(houseId);
+
     }
 
     @PostMapping("/{houseId}/current-occupant/decrease")
-    public ResponseEntity<?> decreaseOccupant(@PathVariable Integer houseId) {
-        try {
-            Integer updated = houseService.decrementOccupant(houseId);
-            return ResponseEntity.ok(Collections.singletonMap("currentOccupant", updated));
-        } catch (IllegalStateException e) {
-            return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
-        } catch (NoSuchElementException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Collections.singletonMap("error", "House with ID " + houseId + " does not exist."));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.singletonMap("error", e.getMessage()));
+    public Integer decreaseOccupant(@PathVariable Integer houseId, Authentication authentication) {
+        if (!hasRole(authentication, "ROLE_HR")) {
+            throw new RoleCheckException("Only HR can change # of Occupants.");
         }
+        return houseService.decrementOccupant(houseId);
+
     }
-
-
-
-
 
 }

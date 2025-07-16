@@ -1,5 +1,6 @@
 package org.beaconfire.housing.service;
 
+import lombok.RequiredArgsConstructor;
 import org.beaconfire.housing.entity.House;
 import org.beaconfire.housing.repo.HouseRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 @Service
+@Transactional
 public class HouseService {
 
     @Autowired
@@ -25,37 +27,26 @@ public class HouseService {
                 .orElseThrow(() -> new NoSuchElementException("House with ID " + id + " not found."));
     }
 
-    @Transactional
-    public void createHouse(House house) {
-        houseRepository.save(house);
+    public House createHouse(House house) {
+        return houseRepository.save(house);
     }
 
-    @Transactional
     public void deleteHouseById(int id) {
         houseRepository.deleteById(id);
     }
 
-    @Transactional
-    public void updateHouse(House house) {
-        houseRepository.save(house);
-    }
-
-    @Transactional
-    public List<House> getAllHouses() {
-        return houseRepository.findAll();
+    public House updateHouse(House house) {
+        return houseRepository.save(house);
     }
 
     public boolean houseExists(int houseId) {
         return houseRepository.existsById(houseId);
     }
 
-    public Page<House> getHouses(int page, int size, String sortBy, String sortDir, String address) {
-        Sort sort = sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
-        Pageable pageable = PageRequest.of(page, size, sort);
-        if (address != null && !address.isEmpty()) {
-            return houseRepository.findByAddressContainingIgnoreCase(address, pageable);
-        }
-        return houseRepository.findAll(pageable);
+    public Page<House> getHouses(String address, Integer maxOccupant,
+                                 Integer currentOccupant, Integer landlordId, Pageable pageable) {
+
+        return houseRepository.findByFilters(address, maxOccupant, currentOccupant, landlordId, pageable);
     }
 
     public Integer getCurrentOccupant(Integer houseId) {

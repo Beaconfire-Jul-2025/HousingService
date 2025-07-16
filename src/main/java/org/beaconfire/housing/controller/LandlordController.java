@@ -1,16 +1,19 @@
 package org.beaconfire.housing.controller;
 
 
+import org.beaconfire.housing.dto.PageListResponse;
+import org.beaconfire.housing.entity.House;
 import org.beaconfire.housing.entity.Landlord;
-import org.beaconfire.housing.exception.UserNotFoundException;
+import org.beaconfire.housing.exception.RoleCheckException;
 import org.beaconfire.housing.service.LandlordService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
-import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/landlord")
@@ -19,56 +22,59 @@ public class LandlordController {
     @Autowired
     private LandlordService landlordService;
 
+    private boolean hasRole(Authentication auth, String role) {
+        return auth.getAuthorities().stream()
+                .anyMatch(a -> role.equals(a.getAuthority()));
+    }
+
     @GetMapping
-    public ResponseEntity<Page<Landlord>> getAll(
+    public PageListResponse<Landlord> getAllLandlords(
+            Authentication auth,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir,
-            @RequestParam(required = false) String email
+            @RequestParam(required = false) String firstName,
+            @RequestParam(required = false) String lastName,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String cellPhone
     ) {
-        return ResponseEntity.ok(landlordService.getAllLandlords(page, size, sortBy, sortDir, email));
+        if (!hasRole(auth, "ROLE_HR")) {
+            throw new RoleCheckException("Only HR can view all landlords.");
+        }
+
+        Sort sort = sortDir.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<Landlord> landlords = landlordService.getAllLandlords(firstName, lastName, email, cellPhone, pageable);
+
+        return PageListResponse.<Landlord>builder()
+                .list(landlords.getContent())
+                .current(landlords.getNumber() + 1)
+                .pageSize(landlords.getSize())
+                .total(landlords.getTotalElements())
+                .build();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getById(@PathVariable Integer id) {
-        return landlordService.getLandlordById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public Landlord getById(@PathVariable Integer id) {
+        return landlordService.getLandlordById(id);
     }
 
     @PostMapping
-    public ResponseEntity<Landlord> create(@RequestBody Landlord landlord) {
-        try{
-            return ResponseEntity.ok(landlordService.createLandlord(landlord));
-        }
-        catch (DataIntegrityViolationException e){
-            return ResponseEntity.badRequest().build();
-        }
+    public Landlord create(@RequestBody Landlord landlord) {
+        return landlordService.createLandlord(landlord);
 
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Landlord> update(@PathVariable Integer id, @RequestBody Landlord landlord) {
-        try {
-            return ResponseEntity.ok(landlordService.updateLandlord(id, landlord));
-        }
-        catch (DataIntegrityViolationException e){
-            return ResponseEntity.badRequest().build();
-        }
-        catch (UserNotFoundException e){
-            return ResponseEntity.notFound().build();
-        }
+    public Landlord update(@PathVariable Integer id, @RequestBody Landlord landlord) {
+        return landlordService.updateLandlord(id, landlord);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable Integer id) {
-        try{
-            landlordService.deleteLandlord(id);
-        }
-        catch (Exception e){
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok().build();
+    public void delete(@PathVariable Integer id) {
+        landlordService.deleteLandlord(id);
     }
 }

@@ -10,29 +10,23 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.util.NoSuchElementException;
+
 @Service
 public class FacilityService {
 
     @Autowired
     private FacilityRepository facilityRepository;
 
-    public Page<Facility> getAllFacilities(int page, int size, String sortBy, String sortDir, String type, Integer houseId) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortDir), sortBy));
-        Specification<Facility> spec = Specification.where(null);
-
-        if (type != null && !type.isEmpty()) {
-            spec = spec.and((root, query, cb) -> cb.equal(root.get("type"), type));
-        }
-
-        if (houseId != null) {
-            spec = spec.and((root, query, cb) -> cb.equal(root.get("house").get("id"), houseId));
-        }
-
-        return facilityRepository.findAll(spec, pageable);
+    public Page<Facility> getFacilities(Integer houseId, String type, Integer quantity,
+                                        Pageable pageable) {
+        return facilityRepository.findByFilters(houseId, type, quantity, pageable);
     }
 
+
     public Facility getFacilityById(int id) {
-        return facilityRepository.findById(id).orElse(null);
+        return facilityRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Facility with ID " + id + " not found."));
     }
 
     public Facility createFacility(Facility facility) {
