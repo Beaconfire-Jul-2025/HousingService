@@ -1,14 +1,12 @@
 package org.beaconfire.housing.exception;
 
 import org.beaconfire.housing.dto.ApiResponse;
-import org.beaconfire.housing.service.FacilityReportService;
-import org.beaconfire.housing.exception.ReportNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.validation.BindingResult;
@@ -91,8 +89,8 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void handleRoleCheckException_ShouldReturn401() {
-        RoleCheckException ex = new RoleCheckException("Access denied");
+    void handleRoleCheckException() {
+        AccessDeniedException ex = new AccessDeniedException("Access denied");
 
         ApiResponse<?> response = globalExceptionHandler.handleRoleCheck(ex);
 

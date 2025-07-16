@@ -2,30 +2,24 @@ package org.beaconfire.housing.controller;
 
 
 import org.beaconfire.housing.dto.PageListResponse;
-import org.beaconfire.housing.entity.House;
 import org.beaconfire.housing.entity.Landlord;
-import org.beaconfire.housing.exception.RoleCheckException;
 import org.beaconfire.housing.service.LandlordService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@PreAuthorize("hasRole('HR') or hasRole('COMPOSITE')")
 @RequestMapping("/landlord")
 public class LandlordController {
 
     @Autowired
     private LandlordService landlordService;
-
-    private boolean hasRole(Authentication auth, String role) {
-        return auth.getAuthorities().stream()
-                .anyMatch(a -> role.equals(a.getAuthority()));
-    }
 
     @GetMapping
     public PageListResponse<Landlord> getAllLandlords(
@@ -39,9 +33,6 @@ public class LandlordController {
             @RequestParam(required = false) String email,
             @RequestParam(required = false) String cellPhone
     ) {
-        if (!hasRole(auth, "ROLE_HR")) {
-            throw new RoleCheckException("Only HR can view all landlords.");
-        }
 
         Sort sort = sortDir.equalsIgnoreCase("desc")
                 ? Sort.by(sortBy).descending()
