@@ -11,12 +11,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
 import org.springframework.data.domain.Page;
+
+import java.util.List;
 
 @RestController
 @PreAuthorize("hasRole('HR') or hasRole('COMPOSITE')")
@@ -29,7 +30,6 @@ public class HouseController {
 
     @GetMapping
     public PageListResponse<House> getAllHouses(
-            Authentication authentication,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
@@ -54,12 +54,12 @@ public class HouseController {
     }
 
     @GetMapping("/{id}")
-    public House getHouseById(@PathVariable int id, Authentication authentication) {
+    public House getHouseById(@PathVariable int id) {
         return houseService.getHouseById(id);
     }
 
     @PostMapping
-    public House createHouse(@Valid @RequestBody HouseDTO dto, Authentication authentication) {
+    public House createHouse(@Valid @RequestBody HouseDTO dto) {
 
         House house = new House();
         house.setLandlordId(dto.getLandlordId());
@@ -77,7 +77,7 @@ public class HouseController {
     }
 
     @PutMapping("/{id}")
-    public House updateHouse(@PathVariable int id, @RequestBody HouseDTO updatedHouse, Authentication authentication) {
+    public House updateHouse(@PathVariable int id, @RequestBody HouseDTO updatedHouse) {
         if (!houseService.houseExists(id)){
             throw new IllegalArgumentException("House does not exist.");
         }
@@ -92,7 +92,7 @@ public class HouseController {
     }
 
     @DeleteMapping("/{id}")
-    public void deleteHouse(@PathVariable int id, Authentication authentication) {
+    public void deleteHouse(@PathVariable int id) {
         houseService.deleteHouseById(id);
     }
 
@@ -103,12 +103,12 @@ public class HouseController {
 
 
     @PostMapping("/{houseId}/current-occupant/increase")
-    public Integer increaseOccupant(@PathVariable Integer houseId, Authentication authentication) {
+    public Integer increaseOccupant(@PathVariable Integer houseId) {
         return houseService.incrementOccupant(houseId);
     }
 
     @PostMapping("/{houseId}/current-occupant/decrease")
-    public Integer decreaseOccupant(@PathVariable Integer houseId, Authentication authentication) {
+    public Integer decreaseOccupant(@PathVariable Integer houseId) {
 
         return houseService.decrementOccupant(houseId);
 
