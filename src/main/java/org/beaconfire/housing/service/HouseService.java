@@ -80,4 +80,8 @@ public class HouseService {
         houseRepository.save(house);
         return house.getCurrentOccupant();
     }
+
+    public Page<House> getAvailableHouses(Pageable pageable) {
+        return houseRepository.findAvailableHouses(pageable);
+    }
 }

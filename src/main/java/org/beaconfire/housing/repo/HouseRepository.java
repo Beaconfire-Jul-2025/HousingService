@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface HouseRepository extends JpaRepository<House, Integer>{
 
@@ -21,4 +23,9 @@ public interface HouseRepository extends JpaRepository<House, Integer>{
                               @Param("currentOccupant") Integer currentOccupant,
                               @Param("landlordId") Integer landlordId,
                               Pageable pageable);
+
+    @Query("SELECT h FROM House h " +
+            "WHERE h.currentOccupant < h.maxOccupant")
+    Page<House> findAvailableHouses(Pageable pageable);
+
 }
