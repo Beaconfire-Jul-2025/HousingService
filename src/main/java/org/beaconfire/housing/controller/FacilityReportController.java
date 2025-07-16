@@ -99,6 +99,24 @@ public class FacilityReportController {
         );
     }
 
+    // update comment for reports
+    @PatchMapping("/facility-report/{reportId}/comment/{commentId}")
+    public ResponseEntity<CreateCommentResponse> updateComment(
+            @PathVariable Integer reportId,
+            @PathVariable Integer commentId,
+            @Valid @RequestBody CreateCommentRequest request,
+            Authentication authentication
+    ){
+        String employeeId = authentication.getPrincipal().toString();
+        facilityReportService.updateComment(reportId, commentId, request.getDescription());
+
+        CreateCommentResponse response = new CreateCommentResponse(
+                commentId,
+                "Comment updated successfully"
+        );
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
     // update the status
     @PatchMapping("/facility-report/{reportId}/status")
     @PreAuthorize("hasRole('ROLE_HR')")
