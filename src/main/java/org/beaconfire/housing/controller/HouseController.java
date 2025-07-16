@@ -120,12 +120,24 @@ public class HouseController {
         Pageable pageable = PageRequest.of(0, 3, sort);
         Page<House> houses = houseService.getAvailableHouses(pageable);
 
+
         return PageListResponse.<House>builder()
                 .list(houses.getContent())
                 .current(houses.getNumber() + 1)
                 .pageSize(3)
                 .total(3)
                 .build();
+    }
+
+    @PostMapping("/assign")
+    public Integer assignHouse() {
+        Sort sort = Sort.by("currentOccupant").descending();
+        Pageable pageable = PageRequest.of(0, 1, sort);
+        Page<House> houses = houseService.getAvailableHouses(pageable);
+        Integer houseId = houses.getContent().get(0).getId();
+        houseService.incrementOccupant(houseId);
+
+        return houseId;
     }
 
 }
