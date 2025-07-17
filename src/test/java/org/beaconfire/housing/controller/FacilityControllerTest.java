@@ -1,7 +1,7 @@
 package org.beaconfire.housing.controller;
-import org.beaconfire.housing.dto.FacilityRequest;
 
 import org.beaconfire.housing.config.SecurityConfig;
+import org.beaconfire.housing.dto.request.FacilityRequest;
 import org.beaconfire.housing.filter.HeaderAuthenticationFilter;
 import org.beaconfire.housing.service.HouseService;
 import org.springframework.context.annotation.Import;
