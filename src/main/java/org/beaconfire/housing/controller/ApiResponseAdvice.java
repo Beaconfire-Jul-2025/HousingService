@@ -11,6 +11,8 @@ import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
+import java.net.URI;
+
 @RestControllerAdvice
 public class ApiResponseAdvice implements ResponseBodyAdvice<Object> {
 
@@ -20,7 +22,10 @@ public class ApiResponseAdvice implements ResponseBodyAdvice<Object> {
     @Override
     public boolean supports(MethodParameter returnType,
                             Class<? extends HttpMessageConverter<?>> converterType) {
-        return !returnType.getParameterType().equals(ApiResponse.class);
+        // This method is primarily for filtering based on return type,
+        // but we'll use the beforeBodyWrite to check the request path.
+        // For now, let it always support, and filter in beforeBodyWrite for path.
+        return true; // We'll handle filtering by path in beforeBodyWrite
     }
 
     @Override
@@ -30,6 +35,18 @@ public class ApiResponseAdvice implements ResponseBodyAdvice<Object> {
                                   Class<? extends HttpMessageConverter<?>> selectedConverterType,
                                   ServerHttpRequest request,
                                   ServerHttpResponse response) {
+
+        URI uri = request.getURI();
+        String path = uri.getPath();
+
+        // Check if the path should be excluded from wrapping
+        if (path.startsWith("/actuator") || path.startsWith("/openapi/api-docs") || path.startsWith("/swagger-ui")) {
+            return body;
+        }
+
+        if (body instanceof ApiResponse) {
+            return body;
+        }
 
         String traceId = MDC.get("traceId");
         String host = request.getURI().getHost();

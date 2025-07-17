@@ -1,8 +1,5 @@
-package org.beaconfire.housing.filter;
+package org.beaconfire.housing.filter; // Assuming this is your package
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -11,22 +8,34 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Component
 @Slf4j
 public class HeaderAuthenticationFilter extends OncePerRequestFilter {
+
+  @Override
+  protected boolean shouldNotFilter(HttpServletRequest request) {
+    String path = request.getRequestURI();
+    // Exclude actuator, swagger-ui, and openapi-docs from this filter
+    return path.startsWith("/actuator")
+            || path.startsWith("/swagger-ui")
+            || path.startsWith("/openapi/api-docs");
+  }
+
   @Override
   protected void doFilterInternal(
-      javax.servlet.http.HttpServletRequest request,
-      javax.servlet.http.HttpServletResponse response,
-      javax.servlet.FilterChain filterChain)
-      throws javax.servlet.ServletException, java.io.IOException {
-
-    // Skip authentication for health checks
-    String path = request.getRequestURI();
-    if (path.startsWith("/actuator")) {
-      filterChain.doFilter(request, response);
-      return;
-    }
+          HttpServletRequest request,
+          HttpServletResponse response,
+          FilterChain filterChain)
+          throws ServletException, IOException {
 
     String userId = request.getHeader("x-User-Id");
     String username = request.getHeader("x-Username");
@@ -36,17 +45,16 @@ public class HeaderAuthenticationFilter extends OncePerRequestFilter {
 
     if (userId != null && username != null && rolesHeader != null) {
       List<GrantedAuthority> authorities =
-          Arrays.stream(rolesHeader.split(","))
-              .map(SimpleGrantedAuthority::new)
-              .collect(Collectors.toList());
+              Arrays.stream(rolesHeader.split(","))
+                      .map(SimpleGrantedAuthority::new)
+                      .collect(Collectors.toList());
       UsernamePasswordAuthenticationToken auth =
-          new UsernamePasswordAuthenticationToken(userId, null, authorities);
+              new UsernamePasswordAuthenticationToken(userId, null, authorities);
       auth.setDetails(username);
       SecurityContextHolder.getContext().setAuthentication(auth);
       filterChain.doFilter(request, response);
     } else {
-      response.sendError(javax.servlet.http.HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+      response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
     }
   }
 }
-

@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/housing")
+@RequestMapping("/facility-report")
 public class FacilityReportController {
     private final FacilityReportService facilityReportService;
 
@@ -36,14 +36,14 @@ public class FacilityReportController {
     }
 
     // get report detail by report id (detail contains comments)
-    @GetMapping("/facility-report/{reportId}/details")
+    @GetMapping("/{reportId}/details")
     public ReportDetailResponse getFacilityReportDetails(@PathVariable Integer reportId) {
         ReportDetailResponse response = facilityReportService.getFacilityReportDetails(reportId);
         return response;
     }
 
     // get a list of reports for specific house
-    @GetMapping("/facility-report")
+    @GetMapping("")
     @PreAuthorize("hasRole('ROLE_HR')")
     public PageListResponse<FacilityReport> getFacilityReportsByHouseId(
             @RequestParam("houseId") Integer houseId,
@@ -64,7 +64,7 @@ public class FacilityReportController {
     }
 
     // create facility report for a house
-    @PostMapping("/facility-report")
+    @PostMapping("")
     @ResponseStatus(HttpStatus.CREATED)
     public CreateReportResponse createFacilityReport(
             @Valid @RequestBody CreateReportRequest request,
@@ -85,7 +85,7 @@ public class FacilityReportController {
     }
 
     // create comment for reports
-    @PostMapping("/facility-report/{reportId}/comment")
+    @PostMapping("/{reportId}/comment")
     public CreateCommentResponse createComment(
             @PathVariable Integer reportId,
             @Valid @RequestBody CreateCommentRequest request,
@@ -100,7 +100,7 @@ public class FacilityReportController {
     }
 
     // update comment for reports
-    @PatchMapping("/facility-report/{reportId}/comment/{commentId}")
+    @PatchMapping("/{reportId}/comment/{commentId}")
     public ResponseEntity<CreateCommentResponse> updateComment(
             @PathVariable Integer reportId,
             @PathVariable Integer commentId,
@@ -118,7 +118,7 @@ public class FacilityReportController {
     }
 
     // update the status
-    @PatchMapping("/facility-report/{reportId}/status")
+    @PatchMapping("/{reportId}/status")
     @PreAuthorize("hasRole('ROLE_HR')")
     public UpdateReportStatusResponse updateFacilityReportStatus(
             @PathVariable Integer reportId,
