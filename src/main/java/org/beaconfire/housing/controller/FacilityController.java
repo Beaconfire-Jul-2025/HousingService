@@ -4,7 +4,6 @@ import org.beaconfire.housing.dto.request.FacilityRequest;
 import org.beaconfire.housing.dto.PageListResponse;
 import org.beaconfire.housing.entity.Facility;
 import org.beaconfire.housing.entity.House;
-import org.beaconfire.housing.exception.RoleCheckException;
 import org.beaconfire.housing.service.FacilityService;
 import org.beaconfire.housing.service.HouseService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,11 +11,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.NoSuchElementException;
 
 @RestController
+@PreAuthorize("hasRole('HR') or hasRole('COMPOSITE')")
 @RequestMapping("/facilities")
 public class FacilityController {
     @Autowired
@@ -24,15 +24,9 @@ public class FacilityController {
     @Autowired
     private HouseService houseService;
 
-    private boolean hasRole(Authentication auth, String role) {
-        return auth.getAuthorities().stream()
-                .anyMatch(a -> role.equals(a.getAuthority()));
-    }
-
 
     @GetMapping
     public PageListResponse<Facility> getFacilities(
-            Authentication authentication,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
@@ -41,9 +35,6 @@ public class FacilityController {
             @RequestParam(required = false) String type,
             @RequestParam(required = false) Integer quantity
     ) {
-        if (!hasRole(authentication, "ROLE_HR")) {
-            throw new RoleCheckException("Only HR can view all houses.");
-        }
 
         Sort sort = sortDir.equalsIgnoreCase("desc")
                 ? Sort.by(sortBy).descending()
