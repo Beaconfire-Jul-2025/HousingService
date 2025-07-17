@@ -1,4 +1,4 @@
-package org.beaconfire.housing.dto;
+package org.beaconfire.housing.dto.request;
 
 
 import lombok.Data;
