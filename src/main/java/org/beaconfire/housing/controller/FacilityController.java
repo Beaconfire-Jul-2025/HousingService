@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.NoSuchElementException;
 
 @RestController
-@PreAuthorize("hasRole('HR') or hasRole('COMPOSITE')")
 @RequestMapping("/facilities")
 public class FacilityController {
     @Autowired

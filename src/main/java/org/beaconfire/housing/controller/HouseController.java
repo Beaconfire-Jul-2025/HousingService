@@ -20,7 +20,6 @@ import org.springframework.data.domain.Page;
 import java.util.List;
 
 @RestController
-@PreAuthorize("hasRole('HR') or hasRole('COMPOSITE')")
 @RequestMapping("/house")
 public class HouseController {
 

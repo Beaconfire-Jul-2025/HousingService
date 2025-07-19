@@ -13,7 +13,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@PreAuthorize("hasRole('HR') or hasRole('COMPOSITE')")
 @RequestMapping("/landlord")
 public class LandlordController {
 
